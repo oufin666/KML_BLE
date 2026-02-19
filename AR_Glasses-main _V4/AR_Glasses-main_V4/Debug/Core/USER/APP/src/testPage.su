@@ -1,0 +1,12 @@
+../Middlewares/LVGL/GUI/lvgl/examples/porting/../../src/hal/../draw/sw/../../core/lv_obj_pos.h:199:20:lv_obj_center	16	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/../../src/core/lv_disp.h:162:26:lv_scr_act	8	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/../../src/widgets/lv_slider.h:84:20:lv_slider_set_value	24	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/../../src/widgets/lv_slider.h:106:20:lv_slider_set_range	24	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/../../src/widgets/lv_slider.h:130:23:lv_slider_get_value	16	static
+../Core/USER/APP/src/testPage.c:25:13:btn_click_event_cb	24	static
+../Core/USER/APP/src/testPage.c:43:13:slider_value_change_cb	24	static
+../Core/USER/APP/src/testPage.c:53:6:lvgl_st7789_test_page_create	48	static
+../Core/USER/APP/src/testPage.c:113:6:update_gps_display	40	static
+../Core/USER/APP/src/testPage.c:154:6:update_gps_display_forTestUpdateFre	48	static
+../Core/USER/APP/src/testPage.c:205:13:hr_update_timer_cb	24	static
+../Core/USER/APP/src/testPage.c:221:6:lv_example_hr_display	8	static

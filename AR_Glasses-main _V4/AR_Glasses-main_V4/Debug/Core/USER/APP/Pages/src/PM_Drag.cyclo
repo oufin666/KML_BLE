@@ -1,0 +1,16 @@
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:121:20:void lv_anim_set_var(lv_anim_t*, void*)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:133:20:void lv_anim_set_exec_cb(lv_anim_t*, lv_anim_exec_xcb_t)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:164:20:void lv_anim_set_values(lv_anim_t*, int32_t, int32_t)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:222:20:void lv_anim_set_ready_cb(lv_anim_t*, lv_anim_ready_cb_t)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:284:20:void lv_anim_set_user_data(lv_anim_t*, void*)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:320:22:void* lv_anim_get_user_data(lv_anim_t*)	1
+../Middlewares/LVGL/GUI/lvgl/src/core/lv_obj.h:321:22:void* lv_obj_get_user_data(lv_obj_t*)	1
+../Core/USER/APP/Pages/inc/PageManager.h:140:10:bool PageManager::GetCurrentLoadAnimAttr(LoadAnimAttr_t*)	1
+../Core/USER/APP/Pages/inc/PageManager.h:144:16:PageManager::LoadAnim_t PageManager::GetCurrentLoadAnimType()	1
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\arm-none-eabi\include\c++\13.3.1\bits\stl_algobase.h:257:5:constexpr const _Tp& std::max(const _Tp&, const _Tp&) [with _Tp = long int]	2
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\arm-none-eabi\include\c++\13.3.1\bits\stl_algobase.h:233:5:constexpr const _Tp& std::min(const _Tp&, const _Tp&) [with _Tp = long int]	2
+../Core/USER/APP/Pages/src/PM_Drag.cpp:22:6:static void PageManager::onRootDragEvent(lv_event_t*)	19
+../Core/USER/APP/Pages/src/PM_Drag.cpp:143:6:static void PageManager::onRootDragAnimFinish(lv_anim_t*)	2
+../Core/USER/APP/Pages/src/PM_Drag.cpp:162:6:void PageManager::RootEnableDrag(lv_obj_t*)	1
+../Core/USER/APP/Pages/src/PM_Drag.cpp:179:6:static void PageManager::onRootAsyncLeave(void*)	1
+../Core/USER/APP/Pages/src/PM_Drag.cpp:192:6:static void PageManager::RootGetDragPredict(lv_coord_t*, lv_coord_t*)	3

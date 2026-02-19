@@ -1,0 +1,7 @@
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_accppg_sync.c:7:5:GH3X2X_TimestampSyncGetFrameDataFlag	4	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_accppg_sync.c:12:6:GH3X2X_TimestampSyncSetPpgIntFlag	16	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_accppg_sync.c:16:6:GH3X2X_TimestampSyncAccInit	4	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_accppg_sync.c:20:6:GH3X2X_TimestampSyncPpgInit	16	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_accppg_sync.c:24:6:GH3X2X_TimestampSyncSend2AlgoCall	16	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_accppg_sync.c:28:6:GH3X2X_TimestampSyncFillAccSyncBuffer	24	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_accppg_sync.c:35:6:GH3X2X_TimestampSyncFillPpgSyncBuffer	16	static

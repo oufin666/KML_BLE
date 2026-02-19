@@ -1,0 +1,16 @@
+../Drivers/BSP/src/GH3220.c:4:6:GH3220_I2C_SDA_Output	1
+../Drivers/BSP/src/GH3220.c:13:6:GH3220_I2C_SDA_Input	1
+../Drivers/BSP/src/GH3220.c:22:6:GH3220_I2C_SDA_Set	1
+../Drivers/BSP/src/GH3220.c:27:6:GH3220_I2C_SCL_Set	1
+../Drivers/BSP/src/GH3220.c:32:5:GH3220_I2C_SDA_Get	2
+../Drivers/BSP/src/GH3220.c:41:6:GH3220_I2C_Delay	1
+../Drivers/BSP/src/GH3220.c:46:6:GH3220_I2C_Start	1
+../Drivers/BSP/src/GH3220.c:58:6:GH3220_I2C_Stop	1
+../Drivers/BSP/src/GH3220.c:71:5:GH3220_I2C_SendByte	2
+../Drivers/BSP/src/GH3220.c:95:5:GH3220_I2C_ReceiveByte	3
+../Drivers/BSP/src/GH3220.c:131:6:hal_gh3220_i2c_init	1
+../Drivers/BSP/src/GH3220.c:152:5:hal_gh3220_i2c_write	4
+../Drivers/BSP/src/GH3220.c:188:5:hal_gh3220_i2c_read	7
+../Drivers/BSP/src/GH3220.c:229:6:hal_gh3220_set	1
+../Drivers/BSP/src/GH3220.c:233:6:hal_gh3220_reset	1
+../Drivers/BSP/src/GH3220.c:238:6:hal_gh3220_int_init	1

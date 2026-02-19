@@ -1,0 +1,5 @@
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_hrv.c:12:16:goodix_hrv_init_func	232	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_hrv.c:44:16:goodix_hrv_deinit_func	16	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_hrv.c:57:5:GH3x2xHrvAlgoInit	24	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_hrv.c:79:5:GH3x2xHrvAlgoDeinit	24	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_hrv.c:97:5:GH3x2xHrvAlgoExe	224	static

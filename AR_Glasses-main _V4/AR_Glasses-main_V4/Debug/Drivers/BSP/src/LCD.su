@@ -1,0 +1,6 @@
+../Drivers/BSP/src/LCD.c:14:6:delay_ms	16	static
+../Drivers/BSP/src/LCD.c:18:6:LCD_GPIO_Init	8	static
+../Drivers/BSP/src/LCD.c:132:6:LCD_Address_Set	24	static
+../Drivers/BSP/src/LCD.c:168:6:LCD_Init	8	static
+../Drivers/BSP/src/LCD.c:268:6:LCD_DrawPoint	16	static
+../Drivers/BSP/src/LCD.c:282:6:LCD_Fill	56	static

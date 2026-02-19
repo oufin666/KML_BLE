@@ -1,0 +1,7 @@
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:121:20:void lv_anim_set_var(lv_anim_t*, void*)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:133:20:void lv_anim_set_exec_cb(lv_anim_t*, lv_anim_exec_xcb_t)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:143:20:void lv_anim_set_time(lv_anim_t*, uint32_t)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:164:20:void lv_anim_set_values(lv_anim_t*, int32_t, int32_t)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:191:20:void lv_anim_set_path_cb(lv_anim_t*, lv_anim_path_cb_t)	1
+../Middlewares/LVGL/GUI/lvgl/src/misc/lv_anim.h:273:20:void lv_anim_set_early_apply(lv_anim_t*, bool)	1
+../Core/USER/Utils/lv_ext/src/lv_anim_timeline_wrapper.cpp:10:6:void lv_anim_timeline_add_wrapper(lv_anim_timeline_t*, const lv_anim_timeline_wrapper_t*)	2

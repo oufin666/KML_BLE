@@ -1,0 +1,7 @@
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/../misc/lv_color.h:592:26:lv_color_t lv_color_make(uint8_t, uint8_t, uint8_t)	16	static
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/../misc/lv_color.h:597:26:lv_color_t lv_color_hex(uint32_t)	24	static
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/../misc/lv_color.h:697:26:lv_color_t lv_color_black()	8	static
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/sw/../../core/lv_obj_pos.h:199:20:void lv_obj_center(_lv_obj_t*)	16	static
+../Middlewares/LVGL/GUI/lvgl/src/core/lv_disp.h:162:26:lv_obj_t* lv_scr_act()	8	static
+../Core/USER/APP/Pages/HeartRate/src/HeartRateView.cpp:7:6:void Page::HeartRateView::SetHeart(lv_obj_t*)	24	static
+../Core/USER/APP/Pages/HeartRate/src/HeartRateView.cpp:26:11:lv_obj_t* Page::HeartRateView::show_icon(lv_obj_t*, const void*, lv_color_t)	32	static

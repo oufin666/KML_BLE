@@ -1,0 +1,27 @@
+../Core/USER/APP/Pages/inc/PageBase.h:87:13:PageBase::~PageBase()	1
+../Core/USER/APP/Pages/inc/PageBase.h:87:13:virtual PageBase::~PageBase()	1
+../Core/USER/APP/Pages/inc/PageBase.h:90:18:virtual void PageBase::onCustomAttrConfig()	1
+../Core/USER/APP/Pages/inc/PageBase.h:93:18:virtual void PageBase::onViewLoad()	1
+../Core/USER/APP/Pages/inc/PageBase.h:96:18:virtual void PageBase::onViewDidLoad()	1
+../Core/USER/APP/Pages/inc/PageBase.h:99:18:virtual void PageBase::onViewWillAppear()	1
+../Core/USER/APP/Pages/inc/PageBase.h:102:18:virtual void PageBase::onViewDidAppear()	1
+../Core/USER/APP/Pages/inc/PageBase.h:105:18:virtual void PageBase::onViewWillDisappear()	1
+../Core/USER/APP/Pages/inc/PageBase.h:108:18:virtual void PageBase::onViewDidDisappear()	1
+../Core/USER/APP/Pages/inc/PageBase.h:111:18:virtual void PageBase::onViewUnload()	1
+../Core/USER/APP/Pages/inc/PageBase.h:114:18:virtual void PageBase::onViewDidUnload()	1
+../Core/USER/APP/Pages/inc/PageBase.h:25:7:PageBase::PageBase()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:13:1:Page::HeartRate::HeartRate()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:17:1:Page::HeartRate::~HeartRate()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:17:1:virtual Page::HeartRate::~HeartRate()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:22:6:virtual void Page::HeartRate::onCustomAttrConfig()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:28:6:virtual void Page::HeartRate::onViewLoad()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:36:6:virtual void Page::HeartRate::onViewDidLoad()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:40:6:virtual void Page::HeartRate::onViewWillAppear()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:45:6:virtual void Page::HeartRate::onViewDidAppear()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:50:6:virtual void Page::HeartRate::onViewWillDisappear()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:55:6:virtual void Page::HeartRate::onViewDidDisappear()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:60:6:virtual void Page::HeartRate::onViewUnload()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:65:6:virtual void Page::HeartRate::onViewDidUnload()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:69:6:void Page::HeartRate::Update()	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:73:6:static void Page::HeartRate::onTimer(lv_timer_t*)	1
+../Core/USER/APP/Pages/HeartRate/src/HeartRate.cpp:81:6:static void Page::HeartRate::onEvent(lv_event_t*)	2

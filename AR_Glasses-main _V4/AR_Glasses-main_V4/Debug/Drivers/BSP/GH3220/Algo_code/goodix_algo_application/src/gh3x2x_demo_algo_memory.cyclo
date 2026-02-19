@@ -1,0 +1,11 @@
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:29:6:GH3X2X_MemFree	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:34:7:GH3X2X_MemMalloc	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:39:6:Gh3x2xPoolIsNotEnough	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:158:7:Gh3x2xAlgoMemApply	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:164:6:Gh3x2xAlgoMemFree	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:192:5:GH3X2X_AlgoMemConfig	2
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:226:5:GH3X2X_AlgoMemInit	5
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:269:6:GH3X2X_AlgoMemDeinit	3
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:284:5:GH3X2X_GetAlgoMemStatus	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:289:5:Gh3x2xGetHrAlgoSupportChnl	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_memory.c:294:5:Gh3x2xGetSpo2AlgoSupportChnl	1

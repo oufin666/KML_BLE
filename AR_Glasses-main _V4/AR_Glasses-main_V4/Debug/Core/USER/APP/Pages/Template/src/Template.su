@@ -1,0 +1,56 @@
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/../misc/lv_color.h:592:26:lv_color_t lv_color_make(uint8_t, uint8_t, uint8_t)	16	static
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/../misc/lv_color.h:693:26:lv_color_t lv_color_white()	8	static
+../Middlewares/LVGL/GUI/lvgl/src/core/lv_obj.h:267:20:void lv_obj_set_user_data(lv_obj_t*, void*)	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:87:13:PageBase::~PageBase()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:87:13:virtual PageBase::~PageBase()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:90:18:virtual void PageBase::onCustomAttrConfig()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:93:18:virtual void PageBase::onViewLoad()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:96:18:virtual void PageBase::onViewDidLoad()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:99:18:virtual void PageBase::onViewWillAppear()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:102:18:virtual void PageBase::onViewDidAppear()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:105:18:virtual void PageBase::onViewWillDisappear()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:108:18:virtual void PageBase::onViewDidDisappear()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:111:18:virtual void PageBase::onViewUnload()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:114:18:virtual void PageBase::onViewDidUnload()	16	static
+../Core/USER/APP/Pages/Template/inc/TemplateModel.h:40:9:Page::TemplateModel::PinCoordinate::PinCoordinate()	16	static
+../Core/USER/APP/Pages/Template/inc/TemplateModel.h:77:9:Page::TemplateModel::GPSData_t::GPSData_t()	16	static
+../Core/USER/APP/Pages/inc/PageBase.h:25:7:PageBase::PageBase()	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:133:14:std::_Vector_base<RawCoordinates, std::allocator<RawCoordinates> >::_Vector_impl::~_Vector_impl()	24	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:315:7:std::_Vector_base<_Tp, _Alloc>::_Vector_base() [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:531:7:std::vector<_Tp, _Alloc>::vector() [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	16	static
+../Core/USER/APP/Pages/Template/inc/TemplateModel.h:15:7:Page::TemplateModel::TemplateModel()	16	static
+../Core/USER/APP/Pages/Template/inc/TemplateModel.h:15:7:Page::TemplateModel::~TemplateModel()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:6:1:Page::Template::Template()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:11:1:Page::Template::~Template()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:11:1:virtual Page::Template::~Template()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:77:6:void Page::Template::ShowChart(int, int)	96	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:169:6:void Page::Template::ShowPin(int)	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:173:6:void Page::Template::InitChart(float, float, int)	72	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:219:6:void Page::Template::UpdateChart(float, float, int)	72	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:256:6:void Page::Template::RefreshElevation(float, float, int)	32	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:287:13:void counter_timer_cb(lv_timer_t*)	24	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:313:6:virtual void Page::Template::onCustomAttrConfig()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:321:6:virtual void Page::Template::onViewLoad()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:333:6:virtual void Page::Template::onViewDidLoad()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:338:6:virtual void Page::Template::onViewWillAppear()	24	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:357:6:virtual void Page::Template::onViewDidAppear()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:362:6:virtual void Page::Template::onViewWillDisappear()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:367:6:virtual void Page::Template::onViewDidDisappear()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:373:6:virtual void Page::Template::onViewUnload()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:378:6:virtual void Page::Template::onViewDidUnload()	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:383:6:void Page::Template::AttachEvent(lv_obj_t*)	16	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:389:6:void Page::Template::Update()	48	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:398:6:static void Page::Template::onTimerUpdate(lv_timer_t*)	24	static
+../Core/USER/APP/Pages/Template/src/Template.cpp:405:6:static void Page::Template::onEvent(lv_event_t*)	32	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:137:2:std::_Vector_base<_Tp, _Alloc>::_Vector_impl::_Vector_impl() [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	24	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:367:7:std::_Vector_base<_Tp, _Alloc>::~_Vector_base() [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:733:7:std::vector<_Tp, _Alloc>::~vector() [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	40	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:992:7:std::vector<_Tp, _Alloc>::size_type std::vector<_Tp, _Alloc>::size() const [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:1126:7:std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](size_type) [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:99:2:std::_Vector_base<_Tp, _Alloc>::_Vector_impl_data::_Vector_impl_data() [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\arm-none-eabi\include\c++\13.3.1\bits\new_allocator.h:104:7:std::__new_allocator<_Tp>::~__new_allocator() [with _Tp = RawCoordinates]	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:386:7:void std::_Vector_base<_Tp, _Alloc>::_M_deallocate(pointer, std::size_t) [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	40	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:301:7:std::_Vector_base<_Tp, _Alloc>::_Tp_alloc_type& std::_Vector_base<_Tp, _Alloc>::_M_get_Tp_allocator() [with _Tp = RawCoordinates; _Alloc = std::allocator<RawCoordinates>]	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\arm-none-eabi\include\c++\13.3.1\bits\stl_construct.h:182:5:void std::_Destroy(_ForwardIterator, _ForwardIterator) [with _ForwardIterator = RawCoordinates*]	16	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\arm-none-eabi\include\c++\13.3.1\bits\new_allocator.h:156:7:void std::__new_allocator<_Tp>::deallocate(_Tp*, size_type) [with _Tp = RawCoordinates]	24	static
+C:\ST\STM32CubeIDE_2.0.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.100.202509120712\tools\arm-none-eabi\include\c++\13.3.1\bits\stl_construct.h:172:9:static void std::_Destroy_aux<true>::__destroy(_ForwardIterator, _ForwardIterator) [with _ForwardIterator = RawCoordinates*]	16	static

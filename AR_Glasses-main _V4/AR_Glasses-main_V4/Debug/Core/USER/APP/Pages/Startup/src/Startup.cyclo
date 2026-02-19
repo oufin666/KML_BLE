@@ -1,0 +1,26 @@
+../Core/USER/APP/Pages/inc/PageBase.h:87:13:PageBase::~PageBase()	1
+../Core/USER/APP/Pages/inc/PageBase.h:87:13:virtual PageBase::~PageBase()	1
+../Core/USER/APP/Pages/inc/PageBase.h:90:18:virtual void PageBase::onCustomAttrConfig()	1
+../Core/USER/APP/Pages/inc/PageBase.h:93:18:virtual void PageBase::onViewLoad()	1
+../Core/USER/APP/Pages/inc/PageBase.h:96:18:virtual void PageBase::onViewDidLoad()	1
+../Core/USER/APP/Pages/inc/PageBase.h:99:18:virtual void PageBase::onViewWillAppear()	1
+../Core/USER/APP/Pages/inc/PageBase.h:102:18:virtual void PageBase::onViewDidAppear()	1
+../Core/USER/APP/Pages/inc/PageBase.h:105:18:virtual void PageBase::onViewWillDisappear()	1
+../Core/USER/APP/Pages/inc/PageBase.h:108:18:virtual void PageBase::onViewDidDisappear()	1
+../Core/USER/APP/Pages/inc/PageBase.h:111:18:virtual void PageBase::onViewUnload()	1
+../Core/USER/APP/Pages/inc/PageBase.h:114:18:virtual void PageBase::onViewDidUnload()	1
+../Core/USER/APP/Pages/inc/PageBase.h:25:7:PageBase::PageBase()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:12:1:Page::Startup::Startup()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:16:1:Page::Startup::~Startup()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:16:1:virtual Page::Startup::~Startup()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:21:6:virtual void Page::Startup::onCustomAttrConfig()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:27:6:virtual void Page::Startup::onViewLoad()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:36:6:virtual void Page::Startup::onViewDidLoad()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:40:6:virtual void Page::Startup::onViewWillAppear()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:46:6:virtual void Page::Startup::onViewDidAppear()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:51:6:virtual void Page::Startup::onViewWillDisappear()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:56:6:virtual void Page::Startup::onViewDidDisappear()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:61:6:virtual void Page::Startup::onViewUnload()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:68:6:virtual void Page::Startup::onViewDidUnload()	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:72:6:static void Page::Startup::onTimer(lv_timer_t*)	1
+../Core/USER/APP/Pages/Startup/src/Startup.cpp:79:6:static void Page::Startup::onEvent(lv_event_t*)	2

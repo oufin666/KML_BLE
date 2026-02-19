@@ -1,0 +1,3 @@
+../Drivers/BSP/GH3220/Kernel_code/module/gh_ecg/gh_ecg.c:1464:5:GH3X2X_CascadeGetEcgEnFlag	1
+../Drivers/BSP/GH3220/Kernel_code/module/gh_ecg/gh_ecg.c:1465:6:GH3X2X_CascadeEcgSlaverLeadDectDisEx	1
+../Drivers/BSP/GH3220/Kernel_code/module/gh_ecg/gh_ecg.c:1466:6:GH3X2X_CascadeEcgSlaverFastRecTrigEx	1

@@ -1,0 +1,4 @@
+../Core/USER/APP/Pages/Startup/src/StartupModel.cpp:14:6:void Page::StartupModel::Init()	16	static
+../Core/USER/APP/Pages/Startup/src/StartupModel.cpp:22:6:void Page::StartupModel::Deinit()	16	static
+../Core/USER/APP/Pages/Startup/src/StartupModel.cpp:32:6:void Page::StartupModel::PlayMusic(const char*)	16	static
+../Core/USER/APP/Pages/Startup/src/StartupModel.cpp:41:6:void Page::StartupModel::SetStatusBarAppear(bool)	16	static

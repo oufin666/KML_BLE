@@ -1,0 +1,6 @@
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_nadt.c:58:6:Gh3x2x_SetIRDetectTimeThreshold	16	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_nadt.c:63:6:SoftWearControlInit	264	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_nadt.c:100:6:GH3x2xCapNadtResultPro	24	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_nadt.c:145:5:GH3x2xSoftAdtAlgoExe	320	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_nadt.c:275:5:GH3x2xSoftAdtAlgoInit	16	static
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_call/src/gh3x2x_demo_algo_call_nadt.c:296:5:GH3x2xSoftAdtAlgoDeinit	24	static

@@ -1,0 +1,8 @@
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_hook.c:22:6:GH3X2X_AlgoLog	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_hook.c:41:6:GH3X2X_AdtAlgorithmResultReport	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_hook.c:88:6:GH3X2X_HrAlgorithmResultReport	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_hook.c:113:6:GH3X2X_Spo2AlgorithmResultReport	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_hook.c:137:6:GH3X2X_HrvAlgorithmResultReport	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_hook.c:163:6:GH3X2X_EcgAlgorithmResultReport	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_hook.c:189:6:GH3X2X_SoftAdtGreenAlgorithmResultReport	5
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_hook.c:241:6:GH3X2X_SoftAdtIrAlgorithmResultReport	5

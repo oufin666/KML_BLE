@@ -1,0 +1,3 @@
+../Drivers/BSP/GH3220/Kernel_code/module/gh_other/gh_changeinttime.c:20:13:GH3x2x_SetIntTime	1
+../Drivers/BSP/GH3220/Kernel_code/module/gh_other/gh_changeinttime.c:25:13:GH3x2x_SetSlotTime	1
+../Drivers/BSP/GH3220/Kernel_code/module/gh_other/gh_changeinttime.c:42:6:GH3x2x_ChangeIntTime	6

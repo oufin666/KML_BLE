@@ -1,0 +1,13 @@
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:67:6:lv_port_fs_init	8	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:106:13:fs_init	16	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:127:14:fs_open	40	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:166:20:fs_close	16	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:186:20:fs_read	32	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:207:20:fs_write	32	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:224:20:fs_seek	24	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:251:20:fs_tell	24	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:266:15:fs_dir_open	32	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:292:20:fs_dir_read	312	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:319:20:fs_dir_close	16	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:344:20:fs_remove	24	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_fs_template.c:367:20:fs_rename	40	static

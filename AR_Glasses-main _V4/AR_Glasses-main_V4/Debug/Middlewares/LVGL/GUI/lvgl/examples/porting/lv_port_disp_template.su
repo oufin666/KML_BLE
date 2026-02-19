@@ -1,0 +1,3 @@
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_disp_template.c:46:6:lv_port_disp_init	8	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_disp_template.c:68:13:disp_init	8	static
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_disp_template.c:78:13:disp_flush	40	static

@@ -1,0 +1,9 @@
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/../misc/lv_color.h:592:26:lv_color_t lv_color_make(uint8_t, uint8_t, uint8_t)	16	static
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/../misc/lv_color.h:597:26:lv_color_t lv_color_hex(uint32_t)	24	static
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/../misc/lv_color.h:693:26:lv_color_t lv_color_white()	8	static
+../Middlewares/LVGL/GUI/lvgl/src/hal/../draw/sw/../../core/lv_obj_pos.h:199:20:void lv_obj_center(_lv_obj_t*)	16	static
+../Middlewares/LVGL/GUI/lvgl/src/core/lv_obj_style.h:92:20:void lv_obj_remove_style_all(_lv_obj_t*)	16	static
+../Middlewares/LVGL/GUI/lvgl/src/core/lv_obj_style_gen.h:1:26:lv_coord_t lv_obj_get_style_width(const _lv_obj_t*, uint32_t)	24	static
+../Middlewares/LVGL/GUI/lvgl/src/core/lv_obj_style_gen.h:19:26:lv_coord_t lv_obj_get_style_height(const _lv_obj_t*, uint32_t)	24	static
+../Core/USER/APP/Pages/Startup/src/StartupView.cpp:16:6:void Page::StartupView::Create(lv_obj_t*)	120	static
+../Core/USER/APP/Pages/Startup/src/StartupView.cpp:51:6:void Page::StartupView::Delete()	16	static

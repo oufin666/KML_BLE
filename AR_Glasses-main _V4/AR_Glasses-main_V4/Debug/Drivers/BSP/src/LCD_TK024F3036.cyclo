@@ -1,0 +1,7 @@
+../Drivers/BSP/src/LCD_TK024F3036.c:14:6:LCD_delay	1
+../Drivers/BSP/src/LCD_TK024F3036.c:18:13:WriteComm	1
+../Drivers/BSP/src/LCD_TK024F3036.c:24:13:WriteData	1
+../Drivers/BSP/src/LCD_TK024F3036.c:30:6:LCD_TK024F3036_GPIO_Init	1
+../Drivers/BSP/src/LCD_TK024F3036.c:42:6:LCD_TK024F3036_Initialize	1
+../Drivers/BSP/src/LCD_TK024F3036.c:145:6:LCD_TK024F3036_Address_Set	1
+../Drivers/BSP/src/LCD_TK024F3036.c:189:6:LCD_TK024F3036_Fill	5

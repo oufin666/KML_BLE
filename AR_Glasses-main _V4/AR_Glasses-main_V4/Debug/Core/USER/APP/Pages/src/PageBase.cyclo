@@ -1,0 +1,4 @@
+../Core/USER/APP/Pages/src/PageBase.cpp:11:6:void PageBase::SetCustomCacheEnable(bool)	1
+../Core/USER/APP/Pages/src/PageBase.cpp:18:6:void PageBase::SetCustomAutoCacheEnable(bool)	1
+../Core/USER/APP/Pages/src/PageBase.cpp:24:6:void PageBase::SetCustomLoadAnimType(uint8_t, uint16_t, lv_anim_path_cb_t)	1
+../Core/USER/APP/Pages/src/PageBase.cpp:35:6:bool PageBase::StashPop(void*, uint32_t)	3

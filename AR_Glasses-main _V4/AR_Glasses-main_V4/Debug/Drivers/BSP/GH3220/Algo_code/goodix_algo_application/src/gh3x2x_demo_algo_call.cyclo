@@ -1,0 +1,7 @@
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_call.c:108:8:GH3X2X_GetAlgoCallDemoVersion	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_call.c:113:6:GH3X2X_RegisterFuncInfoStruct	1
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_call.c:118:6:GH3X2X_AlgoCallConfigInit	3
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_call.c:133:6:GH3X2X_AlgoVersion	6
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_call.c:211:5:GH3X2X_AlgoInit	9
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_call.c:267:5:GH3X2X_AlgoDeinit	8
+../Drivers/BSP/GH3220/Algo_code/goodix_algo_application/src/gh3x2x_demo_algo_call.c:317:5:GH3X2X_AlgoCalculate	10

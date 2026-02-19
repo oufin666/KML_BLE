@@ -1,0 +1,3 @@
+../Core/Src/stream_decompress.c:25:12:get_byte	32	static
+../Core/Src/stream_decompress.c:51:13:write_data	40	static
+../Core/Src/stream_decompress.c:74:5:stream_decompress_file	1928	static

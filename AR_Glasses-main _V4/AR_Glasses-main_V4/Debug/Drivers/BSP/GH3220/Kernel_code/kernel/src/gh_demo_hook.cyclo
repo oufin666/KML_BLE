@@ -1,0 +1,16 @@
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:33:6:gh3x2x_init_hook_func	2
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:66:6:gh3x2x_sampling_start_hook_func	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:83:6:gh3x2x_sampling_stop_hook_func	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:110:6:gh3x2x_get_rawdata_hook_func	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:157:6:gh3x2x_algorithm_get_io_data_hook_func	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:395:6:gh3x2x_frame_data_hook_func	3
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:424:6:gh3x2x_reset_by_protocol_hook	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:431:6:gh3x2x_config_set_start_hook	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:436:6:gh3x2x_config_set_stop_hook	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:445:6:gh3x2x_write_algo_config_hook	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:494:6:GhMultiSensorWearDetStop	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:510:6:GhMultiSensorEventHook	5
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:548:6:GhMultiSensorWearDetStart	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:581:6:Gh3x2x_WearEventHook	5
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:656:6:Gh3x2x_BeforeWakeUpHook	1
+../Drivers/BSP/GH3220/Kernel_code/kernel/src/gh_demo_hook.c:661:6:Gh3x2x_WakeUpHook	1

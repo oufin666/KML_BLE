@@ -1,0 +1,2 @@
+../Drivers/BSP/GH3220/Kernel_code/module/gh_other/gh_movedetect.c:63:6:GetGsensorMoveEventCheckIni	1
+../Drivers/BSP/GH3220/Kernel_code/module/gh_other/gh_movedetect.c:93:5:GetGsensorMoveEventCheckExe	15

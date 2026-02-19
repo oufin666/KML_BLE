@@ -1,0 +1,12 @@
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:125:8:GH3X2X_GetProtocolVersion	4	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:142:8:GH3X2X_GetChipVersion	32	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:175:6:GH3X2X_GetVersion	184	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:240:7:GH3X2X_CalcByteCrc8Val	24	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:261:6:GH3X2X_CalcArrayCrc8Val	24	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:289:5:GH3X2X_UprotocolPacketFormat	40	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:1853:6:Gh2x2xUploadDataToMaster	24	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:1873:6:GH3X2X_GetFuncModeAvailable	4	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:1889:6:GH3X2X_GetFuncModeOpened	4	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:1905:6:GH3X2X_GetTargetFuncMode	4	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:1922:6:GH3X2X_ReportIrqStatus	32	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_uprotocol.c:1943:6:GH3X2X_ProtocolFrameIdClean	16	static

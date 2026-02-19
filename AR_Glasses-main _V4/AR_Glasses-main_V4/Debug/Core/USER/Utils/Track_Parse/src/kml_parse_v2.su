@@ -1,0 +1,15 @@
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:12:17:kml_error_map	16	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:25:14:kml_malloc	24	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:37:13:kml_free	16	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:47:13:reset_temp_point	16	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:57:13:flush_line_cache	24	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:69:13:close_current_segment	24	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:91:13:start_new_segment	24	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:107:12:is_match_cp	32	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:123:13:commit_number	24	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:140:13:commit_point	32	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:185:13:handle_tag_open	32	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:232:13:handle_tag_close	24	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:247:10:parse_kml_file	616	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:413:10:filter_kml_lines	1232	static
+../Core/USER/Utils/Track_Parse/src/kml_parse_v2.c:589:9:load_segment_to_global_buffer	48	static

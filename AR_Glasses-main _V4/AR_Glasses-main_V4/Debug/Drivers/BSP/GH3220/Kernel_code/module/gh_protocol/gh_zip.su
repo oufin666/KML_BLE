@@ -1,0 +1,5 @@
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_zip.c:60:6:GH3X2X_GetRawDataDiff	304	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_zip.c:167:6:GH3X2X_GetDataDiff	40	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_zip.c:243:6:GH3X2X_ZipFillLastRawdataBuffer	32	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_zip.c:277:6:GH3X2X_ZipFillLastDataBuffer	32	static
+../Drivers/BSP/GH3220/Kernel_code/module/gh_protocol/gh_zip.c:820:6:Gh2x2xUploadZipDataToMaster	24	static

@@ -1,0 +1,8 @@
+../Core/USER/APP/Pages/src/ResourcePool.cpp:27:17:void Resource_Init()	1
+../Core/USER/APP/Pages/src/ResourcePool.cpp:76:6:void ResourcePool::Init()	1
+../Core/USER/APP/Pages/src/ResourcePool.cpp:82:12:lv_font_t* ResourcePool::GetFont(const char*)	1
+../Core/USER/APP/Pages/src/ResourcePool.cpp:86:13:const void* ResourcePool::GetImage(const char*)	1
+../Core/USER/APP/Pages/src/ResourcePool.cpp:89:1:void __static_initialization_and_destruction_0()	1
+../Core/USER/APP/Pages/src/ResourcePool.cpp:89:1:void __static_initialization_and_destruction_1()	1
+../Core/USER/APP/Pages/src/ResourcePool.cpp:89:1:cpp)	1
+../Core/USER/APP/Pages/src/ResourcePool.cpp:89:1:cpp)	1

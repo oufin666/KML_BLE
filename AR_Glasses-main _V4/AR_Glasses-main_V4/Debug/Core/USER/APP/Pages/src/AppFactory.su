@@ -1,0 +1,1 @@
+../Core/USER/APP/Pages/src/AppFactory.cpp:26:11:virtual PageBase* AppFactory::CreatePage(const char*)	24	static

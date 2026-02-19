@@ -1,0 +1,12 @@
+../Middlewares/LVGL/GUI/lvgl/src/core/lv_obj.h:267:20:void lv_obj_set_user_data(lv_obj_t*, void*)	1
+../Middlewares/LVGL/GUI/lvgl/src/core/lv_disp.h:162:26:lv_obj_t* lv_scr_act()	1
+../Core/USER/APP/Pages/inc/PageManager.h:131:10:bool PageManager::GetIsOverAnim(uint8_t)	3
+../Core/USER/APP/Pages/inc/PageManager.h:140:10:bool PageManager::GetCurrentLoadAnimAttr(LoadAnimAttr_t*)	1
+../Core/USER/APP/Pages/inc/PageManager.h:144:16:PageManager::LoadAnim_t PageManager::GetCurrentLoadAnimType()	1
+../Core/USER/APP/Pages/src/PM_State.cpp:16:6:void PageManager::StateUpdate(PageBase*)	10
+../Core/USER/APP/Pages/src/PM_State.cpp:74:19:PageBase::State_t PageManager::StateLoadExecute(PageBase*)	8
+../Core/USER/APP/Pages/src/PM_State.cpp:134:19:PageBase::State_t PageManager::StateWillAppearExecute(PageBase*)	1
+../Core/USER/APP/Pages/src/PM_State.cpp:148:19:PageBase::State_t PageManager::StateDidAppearExecute(PageBase*)	1
+../Core/USER/APP/Pages/src/PM_State.cpp:160:19:PageBase::State_t PageManager::StateWillDisappearExecute(PageBase*)	1
+../Core/USER/APP/Pages/src/PM_State.cpp:173:19:PageBase::State_t PageManager::StateDidDisappearExecute(PageBase*)	2
+../Core/USER/APP/Pages/src/PM_State.cpp:194:19:PageBase::State_t PageManager::StateUnloadExecute(PageBase*)	4

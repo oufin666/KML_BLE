@@ -1,0 +1,7 @@
+../Drivers/BSP/GH3220/Kernel_code/driver/src/gh_drv_dump.c:44:6:GH3X2X_DumpModeGet	1
+../Drivers/BSP/GH3220/Kernel_code/driver/src/gh_drv_dump.c:61:6:GH3X2X_DumpModeSet	1
+../Drivers/BSP/GH3220/Kernel_code/driver/src/gh_drv_dump.c:120:6:GH3x2xSetAgcReg	1
+../Drivers/BSP/GH3220/Kernel_code/driver/src/gh_drv_dump.c:125:6:GH3x2xGetAgcReg	1
+../Drivers/BSP/GH3220/Kernel_code/driver/src/gh_drv_dump.c:218:6:GH3X2X_RecordDrvCurrentValue	4
+../Drivers/BSP/GH3220/Kernel_code/driver/src/gh_drv_dump.c:255:6:GH3X2X_RecordDumpData	1
+../Drivers/BSP/GH3220/Kernel_code/driver/src/gh_drv_dump.c:272:6:GH3X2X_UpdateAgcInfo	1

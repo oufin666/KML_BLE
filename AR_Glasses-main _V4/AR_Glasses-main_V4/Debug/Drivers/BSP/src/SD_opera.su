@@ -1,0 +1,3 @@
+../Drivers/BSP/src/SD_opera.c:3:7:fat_GetFatTimeFromRTC	40	static
+../Drivers/BSP/src/SD_opera.c:20:9:testLVGLFatfs	128	static
+../Drivers/BSP/src/SD_opera.c:42:9:testFatfs	1816	static

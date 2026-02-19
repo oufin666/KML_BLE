@@ -1,0 +1,6 @@
+../Middlewares/LVGL/GUI/lvgl/src/extra/libs/png/../../../../src/hal/../draw/../misc/lv_color.h:592:26:lv_color_make	16	static
+../Middlewares/LVGL/GUI/lvgl/src/extra/libs/png/lv_png.c:47:6:lv_png_init	16	static
+../Middlewares/LVGL/GUI/lvgl/src/extra/libs/png/lv_png.c:65:17:decoder_info	72	static
+../Middlewares/LVGL/GUI/lvgl/src/extra/libs/png/lv_png.c:120:17:decoder_open	72	static
+../Middlewares/LVGL/GUI/lvgl/src/extra/libs/png/lv_png.c:188:13:decoder_close	16	static
+../Middlewares/LVGL/GUI/lvgl/src/extra/libs/png/lv_png.c:202:13:convert_color_depth	32	static

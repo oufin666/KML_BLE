@@ -1,0 +1,1 @@
+../Core/USER/APP/Pages/HeartRate/src/HeartRateModel.cpp:15:9:uint8_t Page::HeartRateModel::getHeartRate()	16	static

@@ -1,0 +1,261 @@
+/**ble-kml.wxss**/
+page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.scrollarea {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.container {
+  padding: 24rpx;
+}
+
+.section {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.compress-option {
+  margin-bottom: 20rpx;
+  font-size: 24rpx;
+  color: #666;
+  display: flex;
+  align-items: center;
+}
+
+.compress-option checkbox {
+  margin-right: 8rpx;
+}
+
+.crc-info {
+  margin: 20rpx 0;
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+}
+
+.crc-item {
+  margin-bottom: 10rpx;
+  color: #333;
+}
+
+.crc-item:last-child {
+  margin-bottom: 0;
+}
+
+.btn {
+  margin-top: 16rpx;
+}
+
+.btn-primary {
+  background: #07c160;
+  color: #fff;
+  border: none;
+}
+
+.btn-secondary {
+  background: #576b95;
+  color: #fff;
+  border: none;
+}
+
+.btn-small {
+  margin-left: 16rpx;
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.btn-verify {
+  margin-top: 24rpx;
+  background: #576b95;
+  color: #fff;
+  border: none;
+}
+
+.verify-result {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  background: #f0f8ff;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.file-info,
+.connected-info {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.connected-info {
+  display: flex;
+  align-items: center;
+}
+
+.status-text {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #888;
+}
+
+.device-list {
+  margin-top: 24rpx;
+}
+
+.device-item {
+  padding: 24rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.device-name {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.device-id {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 8rpx;
+  word-break: break-all;
+}
+
+.empty-tip {
+  padding: 24rpx;
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+}
+
+.progress-area {
+  margin-top: 24rpx;
+  padding: 16rpx;
+  background-color: #f8f8f8;
+  border-radius: 8rpx;
+  border: 1rpx solid #e0e0e0;
+}
+
+.progress-text {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.progress-details {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8rpx;
+}
+
+.speed-text,
+.time-left-text {
+  font-size: 24rpx;
+  color: #666;
+  font-weight: 400;
+}
+
+/* 串口助手样式 */
+.serial-section {
+  margin-top: 24rpx;
+}
+
+.serial-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.serial-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 6rpx;
+}
+
+.mode-btn {
+  padding: 6rpx 12rpx;
+  font-size: 20rpx;
+  border: 1rpx solid #ddd;
+  background: #f8f8f8;
+  color: #666;
+  border-radius: 4rpx;
+}
+
+.mode-btn-active {
+  background: #07c160;
+  color: #fff;
+  border-color: #07c160;
+}
+
+.receive-area {
+  height: 150rpx;
+  padding: 12rpx;
+  background: #f8f8f8;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.receive-text {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.send-area {
+  height: 120rpx;
+  padding: 12rpx;
+  background: #f8f8f8;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+  border: 1rpx solid #ddd;
+}
+
+.done-tip {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #07c160;
+}
+
+.error-msg {
+  padding: 24rpx;
+  background: #fff2f0;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: #ff4d4f;
+  margin-top: 24rpx;
+}

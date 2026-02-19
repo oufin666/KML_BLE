@@ -1,0 +1,4 @@
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_indev_template.c:52:6:lv_port_indev_init	1
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_indev_template.c:92:13:encoder_init	1
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_indev_template.c:98:13:encoder_read	1
+../Middlewares/LVGL/GUI/lvgl/examples/porting/lv_port_indev_template.c:116:13:encoder_handler	1

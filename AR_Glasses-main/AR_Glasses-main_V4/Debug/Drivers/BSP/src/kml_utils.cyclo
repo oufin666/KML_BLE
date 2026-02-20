@@ -1,0 +1,12 @@
+../Drivers/BSP/src/kml_utils.c:31:6:init_crc_table	4
+../Drivers/BSP/src/kml_utils.c:48:10:calculate_crc32	2
+../Drivers/BSP/src/kml_utils.c:59:10:calculateCRC32	1
+../Drivers/BSP/src/kml_utils.c:90:10:decompressData	36
+../Drivers/BSP/src/kml_utils.c:251:9:kml_open_compressed_file	3
+../Drivers/BSP/src/kml_utils.c:299:9:kml_process_buffers	7
+../Drivers/BSP/src/kml_utils.c:343:9:kml_handle_transfer_complete	7
+../Drivers/BSP/src/kml_utils.c:418:9:kml_init_system	4
+../Drivers/BSP/src/kml_utils.c:451:9:kml_write_bin_to_sd	4
+../Drivers/BSP/src/kml_utils.c:465:16:kml_fix_file_errors	48
+../Drivers/BSP/src/kml_utils.c:589:9:kml_decompress_file	64
+../Drivers/BSP/src/kml_utils.c:960:9:kml_process_completed_transfer	1

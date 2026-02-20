@@ -1,0 +1,30 @@
+// 测试 Int32 的压缩和解压缩
+
+// 测试负数
+const testValue = -61000000; // -61.0 * 1000000
+
+console.log('测试值:', testValue);
+
+// 压缩
+const buffer = new ArrayBuffer(4);
+const view = new DataView(buffer);
+view.setInt32(0, testValue, true); // little-endian
+
+const bytes = new Uint8Array(buffer);
+console.log('压缩后的字节:', Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' '));
+
+// 解压缩
+const buffer2 = new ArrayBuffer(4);
+const bytes2 = new Uint8Array(buffer2);
+bytes2.set(bytes);
+
+const view2 = new DataView(buffer2);
+const decompressed = view2.getInt32(0, true); // little-endian
+
+console.log('解压缩后的值:', decompressed);
+console.log('是否相等:', testValue === decompressed);
+
+// 转换回浮点数
+const floatValue = decompressed / 1000000;
+console.log('浮点数值:', floatValue);
+

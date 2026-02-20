@@ -1,0 +1,1071 @@
+﻿PC 端解析 KML 文件 v1.3 260125
+说明：在 v1.2 的基础上新增滤波函数确保，每个分段的点数不超过 MAX_POINTS_PER_SEGMENT 阈值 +1。且大数组都使用 malloc 分配空间，尽可能使用堆空间，而不是使用栈空间，防止栈空间爆满，导致死机
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <float.h>
+#include <ctype.h>
+#include <math.h>
+#include <cctype>
+//#include "KML_Parser.h"
+
+/* ================== 一、系统配置与常量定义 ================== */
+
+/* 读取缓冲区大小:
+* 4KB 是常见的磁盘块大小，能保证较高的 I/O 效率。
+如果内存极度紧张，可降至 512 字节，但会增加 SD 卡/Flash 的读写次数。
+*/
+#define READ_BUF_SIZE 4096
+
+/* LineString 内存缓存点数:
+* 为了避免每解析一个点就写一次文件(导致 I/O 瓶颈),
+* 我们在内存中积攒 128 个点(约 128 * 12 = 1.5KB)后再批量写入。
+*/
+#define LINE_CACHE_SIZE 128
+
+/* 缓冲区限制:防止恶意的超长标签或数字导致内存溢出 */
+#define TAG_BUF_SIZE 64 // 足够容纳 "LineString", "coordinates" 
+#define NUM_BUF_SIZE 32 // 足够容纳高精度浮点数如 "-123.12345678"
+
+#define MAX_CP_COUNT 64 //最大支持CP点个数
+/* 判定重合的阈值 (度),2e-4f约为 25-32m米 */
+#define SPLIT_THRESHOLD 2e-4f
+
+#define MIN_SEGMENT_COUNT 200 //每个分段的最小点数数量
+
+#define MAX_POINTS_PER_SEGMENT 3000 //每个分段的最大点数数量
+
+/* 临时文件名 */
+#define FILE_POINT_NAME "D:\\KT_Project\\OPEN_SOURCE\\new\\X-TRACK-main\\Software\\X-Track\\USER\\App\\Resource\\Track\\point_temp.bin"
+#define FILE_LINE_NAME "D:\\KT_Project\\OPEN_SOURCE\\new\\X-TRACK-main\\Software\\X-Track\\USER\\App\\Resource\\Track\\line_temp.bin"
+#define FILE_LINE_FILTERED_NAME "D:\\KT_Project\\OPEN_SOURCE\\new\\X-TRACK-main\\Software\\X-Track\\USER\\App\\Resource\\Track\\line_temp_filter.bin"
+
+/* ================== 二、数据结构定义 ================== */
+typedef enum {
+    KML_OK = 0,
+    KML_ERR_FILE_OPEN, // 文件打开失败
+    KML_ERR_IO_READ, // 读取错误
+    KML_ERR_IO_WRITE, // 写入错误 (如磁盘满)
+    KML_ERR_SEEK, // 文件定位错误 (fgetpos/fsetpos)
+    KML_ERR_BAD_FORMAT, // KML 格式严重错误
+    KML_ERR_INTERNAL, // 内部逻辑错误 (如 malloc 失败)
+    KML_ERR_NO_DATA //无有效数据
+} KmlError;
+
+/* * 解析器状态机枚举
+* 分为三类:
+* 1. 语法动作状态:正在读标签名、属性等。
+* 2. 逻辑上下文状态:当前在 Point 还是 LineString 内部。
+* 3. 专用数据解析状态:处理 coordinates 数值流。
+*/
+typedef enum {
+    // --- 动作状态 (Action States) ---
+    STATE_IDLE, // 空闲,寻找下一个 '<'
+    STATE_TAG_NAME, // 正在读取标签名 (如 "Point")
+    STATE_ATTR_SKIP, // 正在跳过属性 (如 id="123"),直到遇到 '>'
+    STATE_TAG_END_NAME, // 正在读取结束标签名 (如 "Point" 在 </Point> 中)
+
+    // --- 逻辑上下文 (Context States) ---
+    STATE_CTX_ROOT, // 根层级
+    STATE_CTX_PLACEMARK, // 在 <Placemark> ... </Placemark> 内部
+    STATE_CTX_POINT, // 在 <Point> ... </Point> 内部
+    STATE_CTX_LINE, // 在 <LineString> ... </LineString> 内部
+
+    // --- 数据解析 (Data Parsing) ---
+    STATE_COORD_PARSE // 核心状态:正在 <coordinates>...</coordinates> 内部解析数字
+} ParseState;
+
+/* * 紧凑的坐标点结构体
+* 大小:12 字节
+* 对齐:在 32 位系统上自然对齐
+*/
+typedef struct {
+    float lon; // 经度
+    float lat; // 纬度
+    float alt; // 海拔
+} GeoPoint;
+
+/* * 解析上下文核心结构体
+* 设计原则:包含所有运行时状态,支持重入(即不使用 static/global 变量)。
+* 内存占用:约 2KB + 缓冲区。
+*/
+typedef struct {
+    // 状态机控制
+    ParseState curr_state; // 当前正在进行的动作 (读标签/读属性/空闲)
+    ParseState logic_ctx; // 当前所处的层级 (是 Point 还是 LineString?)
+    ParseState logic_ctx_prev; // 备份状态:进入 coordinates 前的状态,用于解析完后恢复
+    // 临时字符串缓冲区
+    char tag_buf[TAG_BUF_SIZE]; // 存放当前正在解析的标签名
+    uint16_t tag_len; // 标签名当前长度
+    char num_buf[NUM_BUF_SIZE]; // 存放当前正在解析的一个数字字符串
+    uint16_t num_len; // 数字字符串长度
+
+    // 单个点的解析状态
+    GeoPoint temp_point; // 正在拼装的坐标点
+    uint8_t coord_comp_idx; // 当前解析到第几个分量?0=经度, 1=纬度, 2=海拔
+    uint8_t has_valid_num; // 标志位:num_buf 里是否有待处理的数字
+    uint8_t is_gx_coord; // 标记当前是否为 <gx:coord> 格式 (空格分隔经纬度)
+
+    // LineString 处理专用字段
+    fpos_t line_len_pos; // 记录文件位置:写入点数占位符的地方
+    uint32_t line_point_cnt; // 计数器:当前 LineString 已经解析了多少个点
+
+    // LineString 批量写入缓存
+    GeoPoint line_cache[LINE_CACHE_SIZE]; // 缓存数组
+    uint16_t cache_idx; // 缓存当前使用量
+
+    // 文件句柄
+    FILE* fp_point; // 输出:点数据文件
+    FILE* fp_line; // 输出:线数据文件
+
+    KmlError error; // 错误标记
+
+    uint32_t valid_point_cnt; //统计有效解析的点数量
+
+    //CP点管理
+    GeoPoint cp_list[MAX_CP_COUNT]; // 假设最多100个CP点
+    uint16_t cp_count; // 已解析的CP点数量
+    uint8_t cp_list_visit[MAX_CP_COUNT];
+
+    // 分段管理
+    fpos_t global_header_pos; // 文件最开始的位置 (记录总段数)
+    fpos_t segment_header_pos; // 当前分段头部的位置 (记录当前段点数)
+
+    uint32_t total_segments; // 总分段数
+    uint32_t curr_seg_points; // 当前分段内的点数
+
+} KmlCtx;
+
+/* ================== 三、辅助函数实现 ================== */
+/* * 重置临时点数据
+* 用途:在开始解析一个新的 Point 之前,清空之前残留的数据。
+*/
+static void reset_temp_point(KmlCtx* ctx) {
+    ctx->temp_point.lon = 0.0f;
+    ctx->temp_point.lat = 0.0f;
+    ctx->temp_point.alt = 0.0f; // 使用 0.0f作为无海拔的哨兵值(Sentinel)
+    ctx->coord_comp_idx = 0;
+    ctx->num_len = 0;
+    ctx->has_valid_num = 0;
+    // 安全起见,清零缓冲区
+    memset(ctx->num_buf, 0, NUM_BUF_SIZE);
+}
+
+/* * 刷新 LineString 缓存
+* 用途:将内存中的 128 个点一次性写入磁盘,减少 fwrite 调用次数。
+*/
+static void flush_line_cache(KmlCtx* ctx) {
+    if (ctx->cache_idx > 0) {
+        size_t written = fwrite(ctx->line_cache, sizeof(GeoPoint), ctx->cache_idx, ctx->fp_line);
+        if (written != ctx->cache_idx) {
+            ctx->error = KML_ERR_IO_WRITE; // 磁盘满或写入错误
+        }
+        ctx->cache_idx = 0; // 清空缓存计数
+    }
+}
+
+/* 结束当前分段 (回填点数) */
+static void close_current_segment(KmlCtx* ctx) {
+    flush_line_cache(ctx); // 必须先清空缓存
+    if (ctx->error != KML_OK) return; // 新增:检查缓存刷新错误
+
+    fpos_t end_pos;
+    if (fgetpos(ctx->fp_line, &end_pos) != 0) { ctx->error = KML_ERR_SEEK; return; }
+    // 回跳到当前段的头部,写入点数
+    if (fsetpos(ctx->fp_line, &ctx->segment_header_pos) != 0) { ctx->error = KML_ERR_SEEK; return; }
+    if (fwrite(&ctx->curr_seg_points, sizeof(uint32_t), 1, ctx->fp_line) != 1) { ctx->error = KML_ERR_IO_WRITE; return; }
+    // 跳回文件末尾
+    if (fsetpos(ctx->fp_line, &end_pos) != 0) { ctx->error = KML_ERR_SEEK; return; }
+}
+
+/* 开启新分段 (写入占位符) */
+static void start_new_segment(KmlCtx* ctx) {
+    // 记录新段头部位置
+    if (fgetpos(ctx->fp_line, &ctx->segment_header_pos) != 0) { ctx->error = KML_ERR_SEEK; return; }
+    // 写 0 占位
+    uint32_t placeholder = 0;
+    if (fwrite(&placeholder, sizeof(uint32_t), 1, ctx->fp_line) != 1) {
+        ctx->error = KML_ERR_IO_WRITE;
+        return;
+    } // 修复:添加花括号,仅错误时return
+
+    ctx->curr_seg_points = 0;
+    ctx->total_segments++;
+}
+
+/* 检查当前点是否匹配任意 CP 点 */
+static int is_match_cp(KmlCtx* ctx, GeoPoint* p) {
+    for (int i = 0; i < ctx->cp_count; i++) {
+        if (ctx->cp_list_visit[i] == 1 || i == 1)continue;
+        float d_lon = fabsf(p->lon - ctx->cp_list[i].lon);
+        float d_lat = fabsf(p->lat - ctx->cp_list[i].lat);
+        if (d_lon < SPLIT_THRESHOLD && d_lat < SPLIT_THRESHOLD) {
+            printf("匹配第几个点:%d\n", i + 1);
+            ctx->cp_list_visit[i] = 1;
+            return 1; // 匹配!
+        }
+    }
+    return 0;
+}
+
+/* ================== 四、核心逻辑:坐标数值处理 ================== */
+/* * 提交单个数值 (Commit Number)
+* 触发时机:遇到逗号(,) 或 空格/换行 时。
+* 功能:将 num_buf 中的字符串转为 float,填入 temp_point 的对应分量。
+*/
+static void commit_number(KmlCtx* ctx) {
+    if (!ctx->has_valid_num) return; // 防御:处理连续逗号 "123,,456"
+
+    ctx->num_buf[ctx->num_len] = '\0'; // 确保字符串 NULL 结尾
+    float val = strtof(ctx->num_buf, NULL); // 修复:用strtof替代atof,避免double转float
+    // 根据索引填入经度、纬度或海拔
+    switch (ctx->coord_comp_idx) {
+        case 0: ctx->temp_point.lon = val; break;
+        case 1: ctx->temp_point.lat = val; break;
+        case 2: ctx->temp_point.alt = val; break;
+        default: break; // 忽略 KML 中可能出现的第4维数据 (如时间戳)
+    }
+
+    ctx->coord_comp_idx++; // 准备接收下一个分量
+    ctx->num_len = 0; // 重置缓冲区指针
+    ctx->has_valid_num = 0; // 标记缓冲区为空
+}
+
+/* * 提交完整的点 (Commit Point)
+* 触发时机:遇到空格、换行 或 <coordinates> 结束符 '<'。
+* 功能:将拼装好的 GeoPoint 写入文件或缓存。
+*/
+static void commit_point(KmlCtx* ctx) {
+    // 1. 确保最后一个正在解析的数字(通常是海拔)被保存
+    commit_number(ctx);
+
+    // 2. 完整性检查:如果只有经度没有纬度,视为无效点丢弃
+    if (ctx->coord_comp_idx < 2) {
+        reset_temp_point(ctx);
+        return;
+    }
+    // 3. 根据当前上下文决定去向
+    if (ctx->logic_ctx_prev == STATE_CTX_POINT) {
+        //如果是单个地标点,直接写文件
+        if (fwrite(&ctx->temp_point, sizeof(GeoPoint), 1, ctx->fp_point) != 1) {
+            ctx->error = KML_ERR_IO_WRITE;
+        }
+        else {
+            // ctx->valid_point_cnt++; //统计有效点
+        }
+        if (ctx->cp_count < MAX_CP_COUNT) {
+            ctx->cp_list[ctx->cp_count++] = ctx->temp_point;
+        }
+    }
+    else if (ctx->logic_ctx_prev == STATE_CTX_LINE) {
+        int need_split = is_match_cp(ctx, &ctx->temp_point);
+
+        // 策略:如果遇到 CP 点,该点作为旧段的结束。
+        // 添加点到缓存(修复:检查数组越界)
+        if (ctx->cache_idx < LINE_CACHE_SIZE) {
+            ctx->line_cache[ctx->cache_idx++] = ctx->temp_point;
+            ctx->curr_seg_points++;
+        }
+        else {
+            ctx->error = KML_ERR_INTERNAL; // 缓存满,标记内部错误
+            return;
+        }
+
+        if (ctx->cache_idx >= LINE_CACHE_SIZE) flush_line_cache(ctx);
+
+        // 如果触发分段,且当前段不为空(避免连续分段产生空段)
+        if (need_split && ctx->curr_seg_points > MIN_SEGMENT_COUNT) {
+            // 1. 结束当前段
+            close_current_segment(ctx);
+            if (ctx->error != KML_OK) return; // 新增:检查错误
+            // 2. 开启新段
+            start_new_segment(ctx);
+
+            // 3.航线连续,新段的起点应该是 CP 点本身
+            ctx->line_cache[ctx->cache_idx++] = ctx->temp_point;
+            ctx->curr_seg_points++;
+        }
+    }
+    // 4. 重置,为下一个点做准备
+    reset_temp_point(ctx);
+}
+
+/* ================== 五、核心逻辑:XML 标签处理 ================== */
+/* * 处理开始标签 (Handle Open Tag)
+触发时机:遇到 '>' 且是开始标签时 (如 <LineString>)
+*/
+static void handle_tag_open(KmlCtx* ctx) {
+    if (ctx->tag_len == 0) return;
+    ctx->tag_buf[ctx->tag_len] = '\0';
+    char* tag = ctx->tag_buf;
+
+    // 快速过滤:忽略 <?xml...> 
+    if (tag[0] == '?' || tag[0] == '!') return;
+
+    /* 状态切换逻辑 */
+    if (strcmp(tag, "Placemark") == 0) {
+        ctx->logic_ctx = STATE_CTX_PLACEMARK;
+    }
+    else if (ctx->logic_ctx == STATE_CTX_PLACEMARK) {
+        // 只有在 Placemark 内部才关心 Point 或 LineString
+        if (strcmp(tag, "Point") == 0) {
+            ctx->logic_ctx = STATE_CTX_POINT;
+        }
+        else if (strcmp(tag, "LineString") == 0 || strcmp(tag, "Track") == 0 || strcmp(tag, "gx:Track") == 0) {
+            ctx->logic_ctx = STATE_CTX_LINE;
+
+            // 如果是文件的第一条线,初始化总头部
+            if (ctx->total_segments == 0) {
+                if (fgetpos(ctx->fp_line, &ctx->global_header_pos) != 0) {
+                    ctx->error = KML_ERR_SEEK;
+                    return; // 新增:失败时直接返回
+                }
+                uint32_t zero = 0;
+                if (fwrite(&zero, sizeof(uint32_t), 1, ctx->fp_line) != 1) {
+                    ctx->error = KML_ERR_IO_WRITE;
+                    return;
+                }
+                // 立即开始第一段
+                start_new_segment(ctx);
+            }
+        }
+    }
+
+    // 检测坐标数据区开始
+    // 同时兼容 KML 标准 (<coordinates>) 和 Google Earth 扩展 (<gx:coord>)
+    if (strcmp(tag, "coordinates") == 0 || strcmp(tag, "gx:coord") == 0 || strcmp(tag, "coord") == 0) {
+        if (ctx->logic_ctx == STATE_CTX_POINT || ctx->logic_ctx == STATE_CTX_LINE) {
+            ctx->logic_ctx_prev = ctx->logic_ctx; // 备份:你是谁的坐标?
+            ctx->curr_state = STATE_COORD_PARSE; // 切换:进入数据解析模式
+            reset_temp_point(ctx);
+
+            if (strcmp(tag, "coord") == 0 || strcmp(tag, "gx:coord") == 0) {
+                ctx->is_gx_coord = 1;
+            }
+        }
+        else {
+            ctx->is_gx_coord = 0;
+        }
+    }
+}
+
+/* * 处理结束标签 (Handle Close Tag)
+* 触发时机:遇到 '>' 且是结束标签时 (如 </LineString>)
+*/
+static void handle_tag_close(KmlCtx* ctx) {
+    ctx->tag_buf[ctx->tag_len] = '\0';
+    char* tag = ctx->tag_buf;
+
+    /* 状态回退逻辑 */
+    if (strcmp(tag, "Placemark") == 0) {
+        ctx->logic_ctx = STATE_CTX_ROOT;
+    }
+    else if (strcmp(tag, "Point") == 0) {
+        ctx->logic_ctx = STATE_CTX_PLACEMARK;
+    }
+    else if (strcmp(tag, "LineString") == 0 || strcmp(tag, "gx:Track") == 0 || strcmp(tag, "Track") == 0) {
+        ctx->logic_ctx = STATE_CTX_PLACEMARK;
+    }
+}
+
+/* ================== 六、主解析循环入口 ================== */
+KmlError parse_kml_file(const char* input_file) {
+    //使用堆分配空间
+    KmlCtx* ctx = (KmlCtx*)malloc(sizeof(KmlCtx));
+    if (!ctx) return KML_ERR_INTERNAL;
+    uint8_t* read_buf = NULL;
+    size_t n_read;
+    int is_self_closing = 0; // 标记是否为 <Point/> 这种自闭合标签
+    KmlError final_err = KML_OK; // 用于保存最终错误码的局部变量
+    // 1. 初始化上下文
+    memset(ctx, 0, sizeof(KmlCtx));
+    ctx->curr_state = STATE_IDLE;
+    ctx->logic_ctx = STATE_CTX_ROOT;
+
+    // 2. 打开文件
+    FILE* fp_in = fopen(input_file, "rb");
+    if (!fp_in) return KML_ERR_FILE_OPEN;
+
+    ctx->fp_point = fopen(FILE_POINT_NAME, "wb");
+    ctx->fp_line = fopen(FILE_LINE_NAME, "wb");
+
+    // 错误处理:任何文件打开失败都需清理
+    if (!ctx->fp_point || !ctx->fp_line) {
+        ctx->error = KML_ERR_FILE_OPEN; // 记录错误以便统一处理
+        goto cleanup;
+    }
+    // 3. 分配读取缓冲区 (可根据系统情况改为静态数组)
+    read_buf = (uint8_t*)malloc(READ_BUF_SIZE);
+    if (!read_buf) {
+        ctx->error = KML_ERR_INTERNAL;
+        goto cleanup;
+    }
+    // 4. 流式处理大循环
+    while ((n_read = fread(read_buf, 1, READ_BUF_SIZE, fp_in)) > 0) {
+        for (size_t i = 0; i < n_read; i++) {
+            if (ctx->error != KML_OK) goto cleanup; // 检测到 IO 错误立即停止
+
+            char c = read_buf[i];
+
+            // 核心状态机设计:分为 "数据流模式" 和 "标签模式"
+
+            // 分支 A: 坐标数据解析模式 (性能敏感路径)
+            // 一旦进入 <coordinates>,我们就不再解析 XML 结构,而是专注解析 "120.1,30.2 120.2..."
+            if (ctx->curr_state == STATE_COORD_PARSE) {
+                if (c == '<') {
+                    //遇到'<'意味着坐标区结束了(即使是</coordinates>)
+                    //1.提交残留数据(防止类似"100,20<"的边界情况)
+                    if (ctx->has_valid_num) commit_point(ctx);
+
+                    //2.状态迁移:退出数据模式,准备解析结束标签
+                    ctx->logic_ctx = ctx->logic_ctx_prev; 
+                    ctx->curr_state = STATE_TAG_NAME;
+                    ctx->tag_len = 0;
+                    is_self_closing = 0;
+                }
+                else if (c == ',' || isspace((int)c)) {
+                    //分隔符:提交当前数字
+                    commit_number(ctx);
+                    if (isspace((int)c)) {
+                        //在标准kml格式下空格/换行意味着一个Point结束(前提是已拿到经纬度)
+                        if (!ctx->is_gx_coord) {
+                            if (ctx->coord_comp_idx > 1) commit_point(ctx);
+                        }
+                    }
+                }
+                else {
+                    //收集数字字符
+                    if (ctx->num_len < NUM_BUF_SIZE - 1) {
+                        //简单的白名单过滤,确保atof安全
+                        if ((c >= '0' && c <= '9') || c == '.' || c == '-' || c == 'e' || c == 'E') { 
+                            ctx->num_buf[ctx->num_len++] = c;
+                            ctx->has_valid_num = 1;
+                        }
+                    }
+                    continue;//在数据模式下,直接跳过后面的XML逻辑
+                }
+            }
+
+            //分支B:XML结构解析模式
+            switch (ctx->curr_state) {
+                case STATE_IDLE://等待'<'
+                    if (c == '<') {
+                        ctx->curr_state = STATE_TAG_NAME;
+                        ctx->tag_len = 0;
+                        is_self_closing = 0;
+                    }
+                    break;
+
+                case STATE_TAG_NAME://正在读标签名
+                    if (c == '>') {
+                        //标签结束:<Tag>
+                        if (is_self_closing) handle_tag_close(ctx);//处理<Tag/>
+                        else handle_tag_open(ctx);
+                        //如果没进入坐标模式,就回到空闲
+                        if (ctx->curr_state != STATE_COORD_PARSE) {
+                            ctx->curr_state = STATE_IDLE;
+                        }
+                    }
+                    else if (isspace((int)c)) {
+                        //遇到空格:<Tag attr...>
+                        handle_tag_open(ctx);//此时标签名已完整,先处理
+                        ctx->curr_state = STATE_ATTR_SKIP;//然后去跳过属性
+                    }
+                    else if (c == '/') {
+                        if (ctx->tag_len == 0) {
+                            ctx->curr_state = STATE_TAG_END_NAME; //是结束标签</
+                        }
+                        else {
+                            is_self_closing = 1;//是自闭合标签<Tag/
+                        }
+                    }
+                    else {
+                        //记录标签名,防止缓冲区溢出
+                        if (ctx->tag_len < TAG_BUF_SIZE - 1) {
+                            ctx->tag_buf[ctx->tag_len++] = c;
+                        }
+                    }
+                    break;
+
+                case STATE_ATTR_SKIP://属性跳过模式
+                    //我们不解析属性,只等待'>'结束
+                    if (c == '>') {
+                        if (is_self_closing) handle_tag_close(ctx);
+                        if (ctx->curr_state != STATE_COORD_PARSE) {
+                            ctx->curr_state = STATE_IDLE;
+                        }
+                    } else if (c == '/') {
+                        is_self_closing = 1; // <Tag attr="val"/>
+                    }
+                    break;
+
+                case STATE_TAG_END_NAME: //正在读结束标签</Tag...
+                    if (c == '>') {
+                        handle_tag_close(ctx);
+                        ctx->curr_state = STATE_IDLE;
+                    }
+                    else if (!isspace((int)c)) {
+                        if (ctx->tag_len < TAG_BUF_SIZE - 1) {
+                            ctx->tag_buf[ctx->tag_len++] = c;
+                        }
+                    }
+                    break;
+
+                default:
+                    ctx->curr_state = STATE_IDLE;
+                    break;
+            }
+        }
+    }
+
+    //检查是否有硬件/系统级的读取错误
+    if (ferror(fp_in)) {
+        ctx->error = KML_ERR_IO_READ;
+        goto cleanup;
+    }
+
+    //---结束处理---
+    //1.关闭最后一段
+    if (ctx->curr_seg_points > MIN_SEGMENT_COUNT) {
+        close_current_segment(ctx);
+    }
+
+    //2.回填文件总头部的Total Segments
+    if (ctx->fp_line && ctx->error == KML_OK) {
+        fpos_t end_pos;
+        if (fgetpos(ctx->fp_line, &end_pos) == 0) {
+            if (fsetpos(ctx->fp_line, &ctx->global_header_pos) == 0) {
+                fwrite(&ctx->total_segments, sizeof(uint32_t), 1, ctx->fp_line);
+                fsetpos(ctx->fp_line, &end_pos);
+            }
+            else {
+                ctx->error = KML_ERR_SEEK;
+            }
+        }
+        else {
+            ctx->error = KML_ERR_SEEK;
+        }
+    }
+
+cleanup:
+    /* 资源释放与清理 */
+    if (ctx) {
+        final_err = ctx->error;
+    }
+    else {
+        final_err = KML_ERR_INTERNAL;
+    }
+    if (read_buf) free(read_buf);
+    if (fp_in) fclose(fp_in);
+
+    if (ctx) {
+        if (ctx->fp_point) fclose(ctx->fp_point);
+        if (ctx->fp_line) fclose(ctx->fp_line);
+        free(ctx); // 释放结构体内存
+        ctx = NULL; // 防止悬空指针
+    }
+
+    // 如果解析中途失败,删除生成的垃圾文件
+    if (final_err != KML_OK) {
+        remove(FILE_POINT_NAME);
+        remove(FILE_LINE_NAME);
+    }
+    return final_err;
+}
+
+/*
+* 对分段线段文件进行滤波,确保每个分段的点数不要超过阈值
+*/
+KmlError filter_kml_lines(const char* src_file_path, const char* dst_file_path) {
+    FILE* fp_src = fopen(src_file_path, "rb");
+    FILE* fp_dst = fopen(dst_file_path, "wb");
+    KmlError ret_error = KML_OK;
+
+    if (!fp_src || !fp_dst) {
+        if (fp_src) fclose(fp_src);
+        if (fp_dst) fclose(fp_dst);
+        return KML_ERR_FILE_OPEN;
+    }
+    uint16_t write_idx;
+    uint32_t total_segments = 0;
+    //修改为堆上分配内存
+    GeoPoint* read_cache = NULL;
+    GeoPoint* write_cache = NULL;
+    // 读取总段数
+    if (fread(&total_segments, sizeof(uint32_t), 1, fp_src) != 1) {
+        ret_error = KML_ERR_IO_READ;
+        goto error_cleanup;
+    }
+    // 写入总段数
+    if (fwrite(&total_segments, sizeof(uint32_t), 1, fp_dst) != 1) {
+        ret_error = KML_ERR_IO_WRITE;
+        goto error_cleanup;
+    }
+    read_cache = (GeoPoint*)malloc(sizeof(GeoPoint) * LINE_CACHE_SIZE);
+    write_cache = (GeoPoint*)malloc(sizeof(GeoPoint) * LINE_CACHE_SIZE);
+    if (!read_cache || !write_cache) {
+        ret_error = KML_ERR_INTERNAL; // 内存不足
+        goto error_cleanup;
+    }
+    /*
+    // 栈上内存分配 (约 3KB)
+    GeoPoint read_cache[LINE_CACHE_SIZE];
+    GeoPoint write_cache[LINE_CACHE_SIZE];
+    */
+    write_idx = 0;
+
+    // 逐段处理
+    for (uint32_t i = 0; i < total_segments; i++) {
+        uint32_t src_count = 0;
+        if (fread(&src_count, sizeof(uint32_t), 1, fp_src) != 1) {
+            ret_error = KML_ERR_IO_READ;
+            goto error_cleanup;
+        }
+
+        // 记录回填位置
+        fpos_t segment_head_pos;
+        if (fgetpos(fp_dst, &segment_head_pos) != 0) {
+            ret_error = KML_ERR_SEEK;
+            goto error_cleanup;
+        }
+        // 写占位符
+        uint32_t placeholder = 0;
+        if (fwrite(&placeholder, sizeof(uint32_t), 1, fp_dst) != 1) {
+            ret_error = KML_ERR_IO_WRITE;
+            goto error_cleanup;
+        }
+
+        uint32_t dst_count = 0;
+        write_idx = 0; // 每个新段开始时,重置写缓存索引
+
+        // === 策略分支 ===
+        if (src_count <= MAX_POINTS_PER_SEGMENT) {
+            /* 场景 A: 直接复制 */
+            uint32_t remain = src_count;
+            while (remain > 0) {
+                uint16_t chunk = (remain > LINE_CACHE_SIZE) ? LINE_CACHE_SIZE : (uint16_t)remain;
+                if (fread(read_cache, sizeof(GeoPoint), chunk, fp_src) != chunk) {
+                    ret_error = KML_ERR_IO_READ;
+                    goto error_cleanup;
+                }
+                // 统一使用 write_cache 写入
+                if (write_idx + chunk > LINE_CACHE_SIZE) {
+                    if (fwrite(write_cache, sizeof(GeoPoint), write_idx, fp_dst) != write_idx) {
+                        ret_error = KML_ERR_IO_WRITE;
+                        goto error_cleanup;
+                    }
+                    write_idx = 0;
+                }
+                memcpy(&write_cache[write_idx], read_cache, chunk * sizeof(GeoPoint));
+                write_idx += chunk;
+                remain -= chunk;
+            }
+            dst_count = src_count;
+        }
+        else {
+            /* 场景 B: 均匀抽稀 */
+            if (MAX_POINTS_PER_SEGMENT <= 1) {
+                ret_error = KML_ERR_INTERNAL;
+                goto error_cleanup;
+            }
+
+            float step = (float)(src_count - 1) / (float)(MAX_POINTS_PER_SEGMENT - 1);
+            float next_sample_idx = 0.0f;
+            uint32_t processed = 0;
+            uint8_t is_last_point_processed = 0; // 新增:标记尾点是否已处理
+
+            while (processed < src_count) {
+                uint32_t remain = src_count - processed;
+                uint16_t chunk = (remain > LINE_CACHE_SIZE) ? LINE_CACHE_SIZE : (uint16_t)remain;
+
+                if (fread(read_cache, sizeof(GeoPoint), chunk, fp_src) != chunk) {
+                    ret_error = KML_ERR_IO_READ;
+                    goto error_cleanup;
+                }
+
+                for (uint16_t k = 0; k < chunk; k++) {
+                    uint32_t global_idx = processed + k; 
+                    int is_last_point = (global_idx == src_count - 1);
+
+                    //判定逻辑:保留当前点的条件
+                    if (is_last_point || (float)global_idx >= next_sample_idx) {
+                        //核心修改:允许最多MAX+1个点
+                        if (dst_count <= MAX_POINTS_PER_SEGMENT) {
+                            write_cache[write_idx++] = read_cache[k];
+                            dst_count++;
+                            is_last_point_processed = is_last_point ? 1 : is_last_point_processed;
+                            //非尾点时推进采样索引
+                            if (!is_last_point) {
+                                next_sample_idx += step;
+                            }
+                        }
+                    }
+
+                    //缓存满,刷盘
+                    if (write_idx >= LINE_CACHE_SIZE) {
+                        if (fwrite(write_cache, sizeof(GeoPoint), write_idx, fp_dst) != write_idx) {
+                            ret_error = KML_ERR_IO_WRITE;
+                            goto error_cleanup;
+                        }
+                        write_idx = 0;
+                    }
+                }
+                processed += chunk;
+            }
+        }
+
+        //统一刷入剩余缓存(无论场景A还是B)
+        if (write_idx > 0) {
+            if (fwrite(write_cache, sizeof(GeoPoint), write_idx, fp_dst) != write_idx) {
+                ret_error = KML_ERR_IO_WRITE;
+                goto error_cleanup;
+            }
+            write_idx = 0;
+        }
+
+        // 回填点数
+        fpos_t end_pos;
+        if (fgetpos(fp_dst, &end_pos) != 0) { ret_error = KML_ERR_SEEK; goto error_cleanup; }
+        if (fsetpos(fp_dst, &segment_head_pos) != 0) { ret_error = KML_ERR_SEEK; goto error_cleanup; }
+        if (fwrite(&dst_count, sizeof(uint32_t), 1, fp_dst) != 1) { ret_error = KML_ERR_IO_WRITE; goto error_cleanup; }
+        if (fsetpos(fp_dst, &end_pos) != 0) { ret_error = KML_ERR_SEEK; goto error_cleanup; }
+    }
+    free(read_cache);
+    free(write_cache);
+    read_cache = NULL;
+    write_cache = NULL;
+    fclose(fp_src);
+    fclose(fp_dst);
+    fp_src = NULL; // 防止后续误用
+    fp_dst = NULL;
+
+    // 文件替换
+    if (remove(src_file_path) != 0) {
+        ret_error = KML_ERR_IO_WRITE; // 无法删除旧文件
+        goto error_cleanup_no_src_dst;
+    }
+    if (rename(dst_file_path, src_file_path) != 0) {
+        ret_error = KML_ERR_IO_WRITE;
+        goto error_cleanup_no_src_dst;
+    }
+    return KML_OK;
+
+error_cleanup:
+    if (read_cache) free(read_cache);
+    if (write_cache) free(write_cache);
+    if (fp_src) fclose(fp_src);
+    if (fp_dst) fclose(fp_dst);
+
+error_cleanup_no_src_dst:
+    remove(dst_file_path); // 失败时清理产生的临时文件
+    return ret_error;
+}
+
+/**
+* @brief 验证Point文件(流式读取,不占用RAM)
+*/
+void verify_point_bin_stream(const char* file_path) {
+    printf("\n=== Checking Point File: %s ===\n", file_path);
+    FILE* fp = fopen(file_path, "rb");
+    if (!fp) { perror("Open failed"); return; }
+
+    // 1. 获取文件大小和总点数
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    size_t total_points = file_size / sizeof(GeoPoint);
+    printf("Total Points: %zu (Size: %ld bytes)\n", total_points, file_size);
+
+    if (total_points == 0) { fclose(fp); return; }
+
+    GeoPoint pt;
+    rewind(fp);
+
+    // 2. 打印
+    // printf("--- Head (First 10) ---\n");
+    for (size_t i = 0; i < total_points; i++) {
+        fread(&pt, sizeof(GeoPoint), 1, fp);
+        printf("[%zu] %.6f, %.6f, %.2f\n", i+1, pt.lon, pt.lat, pt.alt);
+    }
+    fclose(fp);
+}
+
+/**
+* @brief 打印单个点辅助函数
+*/
+static void print_point(const char* label, size_t index, GeoPoint p) {
+    printf("%s[%zu] Lon: %.6f, Lat: %.6f, Alt: %.2f\n", label, index, p.lon, p.lat, p.alt);
+}
+
+/**
+* @brief 验证 Line 文件 (新格式:Header + Array)
+* 格式:[TotalCount (4B)] + [GeoPoint 1] + [GeoPoint 2] ...
+*/
+void verify_line_bin_fixed(const char* file_path) {
+    printf("\n=== Checking Line File (Header Mode): %s ===\n", file_path);
+
+    FILE* fp = fopen(file_path, "rb");
+    if (!fp) {
+        perror("Error opening file");
+        return;
+    }
+    // 1. 读取文件头的总点数
+    uint32_t total_points = 0;
+    if (fread(&total_points, sizeof(uint32_t), 1, fp) != 1) {
+        printf("Error: File too short, cannot read header.\n");
+        fclose(fp);
+        return;
+    }
+    printf("Header says Total Points: %u\n", total_points);
+
+    // (可选) 校验文件实际大小是否匹配
+    // 理论大小 = 4字节头 + 点数 * 12字节
+    long expected_size = sizeof(uint32_t) + (long)total_points * sizeof(GeoPoint);
+    fseek(fp, 0, SEEK_END);
+    long actual_size = ftell(fp);
+    if (actual_size != expected_size) {
+        printf("Warning: File size mismatch! Expected %ld bytes, got %ld bytes.\n", expected_size, actual_size);
+        // 注意:如果不匹配,我们仍然尝试读取,但在生产环境中这通常意味着文件损坏
+    }
+    // 如果没有点,直接退出
+    if (total_points == 0) {
+        fclose(fp);
+        return;
+    }
+    // 2. 打印前 10 个点
+    // 文件指针现在正好位于 Header 之后 (偏移量 4),直接读取即可
+    fseek(fp, sizeof(uint32_t), SEEK_SET); // 确保指针在数据区开头
+
+    printf("--- Head (First 10) ---\n");
+    size_t count_to_read = (total_points < 10) ? total_points : 10;
+    GeoPoint pt;
+
+    for (size_t i = 0; i < count_to_read; i++) {
+        fread(&pt, sizeof(GeoPoint), 1, fp);
+        print_point("H", i, pt);
+    }
+    // 3. 打印后 10 个点
+    if (total_points > 10) {
+        printf("--- Tail (Last 10) ---\n");
+
+        // 计算偏移量:Header大小 + (总点数 - 10) * 点大小
+        long offset = sizeof(uint32_t) + (long)((total_points - 10) * sizeof(GeoPoint));
+        // 直接跳转到倒数第10个点的位置
+        fseek(fp, offset, SEEK_SET);
+
+        for (size_t i = 0; i < 10; i++) {
+            // 读取并打印
+            if (fread(&pt, sizeof(GeoPoint), 1, fp) == 1) {
+                // 计算该点的全局索引
+                size_t global_idx = total_points - 10 + i;
+                print_point("T", global_idx, pt);
+            }
+        }
+    }
+    fclose(fp);
+}
+
+void verify_line_bin_segmented(const char* file_path) {
+    printf("\n=== Checking Segmented Line File: %s ===\n", file_path);
+    FILE* fp = fopen(file_path, "rb");
+    if (!fp) {
+        printf("Error: Cannot open file %s\n", file_path);
+        return;
+    }
+    // 1. 读取总段数
+    uint32_t total_segs = 0;
+    if (fread(&total_segs, sizeof(uint32_t), 1, fp) != 1) {
+        printf("Error: Failed to read total segments\n");
+        fclose(fp);
+        return;
+    }
+    printf("Total Segments: %u\n", total_segs);
+
+    // 2. 遍历每一段
+    for (uint32_t s = 0; s < total_segs; s++) {
+        uint32_t pts_in_seg = 0;
+        if (fread(&pts_in_seg, sizeof(uint32_t), 1, fp) != 1) {
+            printf("Error: Failed to read segment %u point count\n", s + 1);
+            fclose(fp);
+            return;
+        }
+        printf(" Segment %u: %u points\n", s + 1, pts_in_seg);
+
+        // 跳过点数据,或者打印首尾点
+        if (pts_in_seg > 0) {
+            GeoPoint p;
+            if (fread(&p, sizeof(GeoPoint), 1, fp) != 1) {
+                printf("Error: Failed to read start point of segment %u\n", s + 1);
+                fclose(fp);
+                return;
+            }
+            printf( " Start: %.6f, %.6f\n", p.lon, p.lat);
+
+            // 跳过中间的点
+            if (pts_in_seg > 1) {
+                if (fseek(fp, (pts_in_seg - 2) * sizeof(GeoPoint), SEEK_CUR) != 0) {
+                    printf("Error: Failed to seek in segment %u\n", s + 1);
+                    fclose(fp);
+                    return;
+                }
+                if (fread(&p, sizeof(GeoPoint), 1, fp) != 1) {
+                    printf("Error: Failed to read end point of segment %u\n", s + 1);
+                    fclose(fp);
+                    return;
+                }
+                printf( " End : %.6f, %.6f\n", p.lon, p.lat);
+            }
+        }
+    }
+    fclose(fp);
+}使用说明
+基础数据单元
+GeoPoint 结构体
+代码中所有的坐标点都以这个结构体形式存储。
+大小：12 字节 (3 * 4 bytes)
+内存布局:
+
+0-3 bytes	4-7 bytes	8-11 bytes
+float (Lon)	float (Lat)	float (Alt)
+
+点数据文件 (point_temp.bin)
+该文件用于存储独立的 <Point> 标签数据 (如地标)。
+结构类型：纯数组结构 (Flat Array)
+特点：没有任何文件头或元数据，文件中全是紧密排列的 GeoPoint 数据。
+文件布局图:
+[ Start of File ]
+| GeoPoint 1 (12 Bytes) |
+| GeoPoint 2 (12 Bytes) |
+| ...... |
+| GeoPoint N (12 Bytes) |
+[ End of File ]
+
+线 / 轨迹数据文件 (line_temp.bin)
+该文件用于存储 <LineString> 或 <Track> 数据。由于轨迹可能由多条不连续的线段组成 (分段), 该文件采用了 分段存储结构。
+结构类型：层级头结构 (Hierarchical Header)
+逻辑流程：先读总段数 -> 循环 -> 读当前段点数 -> 读具体坐标。
+文件布局详细说明:
+偏移量 (Offset)	数据类型	描述
+0x00	uint32_t	总分段数 (Total Segments), 假设值为 N
+0x04	uint32_t	第 1 段的点数 (Count 1)
+0x08	GeoPoint	第 1 段 - 第 1 个 点
+...	...	...
+...	GeoPoint	第 1 段 - 最后一个点
+Next	uint32_t	第 2 段的点数 (Count 2)
+Next+4	GeoPoint	第 2 段 - 第 1 个 点
+⋮	
+Next	uint32_t	第 N 段的点数 (Count N)
+...	GeoPoint	第 N 段 - 坐标数据
+
+调用说明
+const char* kml_file_path = "D:\\KT_Project\\OPEN_SOURCE\\new\\X-TRACK-main\\Software\\X-Track\\USER\\App\\Resource\\Track\\guangzhou100.kml"; // 你的KML文件路径
+printf("Start parsing...\n");
+KmlError err = parse_kml_file(kml_file_path);//提取标记点和航线轨迹到,并按标记点切分到FILE_LINE_NAME文件
+if (err == KML_OK) {
+    printf("Success. Data extracted to .bin files.\n");
+}
+else {
+    printf("Failed with error code: %d\n", err);
+}
+//对FILE_LINE_NAME文件分段文件进行滤波处理确保每段的点数不超过MAX_POINTS_PER_SEGMENT+1个点
+filter_kml_lines(FILE_LINE_NAME, FILE_LINE_FILTERED_NAME);
+verify_line_bin_segmented(FILE_LINE_NAME);//验证可视化打印输出
+verify_point_bin_stream(FILE_POINT_NAME);//验证可视化打印输出
+
+调试说明
+先坚持拿来主义，不去关注内部的代码实现，按照调用说明先调用parse_kml_file(kml_file_path)，再调用filter_kml_lines(FILE_LINE_NAME, FILE_LINE_FILTERED_NAME)即可。
+渲染实现方式
+第一种做法：按照轨迹数据文件的文件布局，先读出总的分段数目，然后可以利用一个动态大数组使用 malloc 分配，一次性读出每段的所有坐标点数，渲染到屏幕上。
+第二种做法：也可以尝试每次只读出 1000 个点然后渲染到屏幕上，然后继续读取 1000 点渲染到屏幕上，这样可以尽可能减少内存的占用，但相对应渲染时间会增加。
+坐标点匹配实现
+如果要匹配当前位置对应在屏幕的哪一个位置，可以使用文件流的方式，比如每次就只读出 128 个点，然后遍历该点于其中哪一段的哪一个索引匹配 (要确定两个索引，i: 第几段，j: 该段的第几个索引)
+
+简单代码示意
+
+// 定义匹配的容差 (根据你的GPS精度调整)
+#define MATCH_EPSILON_DEG 4e-5f 
+#define MATCH_EPSILON_ALT 3.0f // 海拔容差 (米)
+
+typedef struct {
+    int32_t seg_index; // 第几段 (从0开始,-1表示未找到)
+    int32_t point_index; // 该段中的第几个点 (从0开始,-1表示未找到)
+} SearchResult;
+
+/**
+* @brief 在线路文件中查找特定坐标的索引
+* @param file_path line_temp.bin 的路径
+* @param target 要查找的目标点
+* @return SearchResult 包含段索引和点索引
+*/
+SearchResult find_point_index(const char* file_path, GeoPoint target) {
+    SearchResult result = { -1, -1 };
+
+    FILE* fp = fopen(file_path, "rb");
+    if (!fp) return result;
+
+    // 1. 读取总段数
+    uint32_t total_segments = 0;
+    if (fread(&total_segments, sizeof(uint32_t), 1, fp) != 1) {
+        fclose(fp);
+        return result;
+    }
+    // 2. 申请堆内存缓存 (与之前保持一致,约 1.5KB)
+    // 这样做既快又不会爆栈
+    GeoPoint* cache = (GeoPoint*)malloc(sizeof(GeoPoint) * LINE_CACHE_SIZE);
+    if (!cache) {
+        fclose(fp);
+        return result; // 内存不足
+    }
+    // 3. 遍历每一段
+    for (uint32_t s_idx = 0; s_idx < total_segments; s_idx++) {
+        uint32_t points_in_seg = 0;
+
+        // 读取当前段的头部 (点数)
+        if (fread(&points_in_seg, sizeof(uint32_t), 1, fp) != 1) break;
+
+        uint32_t processed_in_seg = 0;
+
+        // 4. 分块读取当前段的点数据
+        while (processed_in_seg < points_in_seg) {
+            // 计算本次要读多少个点
+            uint32_t remain = points_in_seg - processed_in_seg;
+            uint16_t chunk = (remain > LINE_CACHE_SIZE) ? LINE_CACHE_SIZE : (uint16_t)remain;
+            // 批量读取 IO (时间优化的关键)
+            size_t read_cnt = fread(cache, sizeof(GeoPoint), chunk, fp);
+            if (read_cnt != chunk) break; // 文件损坏或读取错误
+
+            // 在内存中快速比对
+            for (uint16_t k = 0; k < chunk; k++) {
+                GeoPoint* p = &cache[k];
+
+                // 核心比较逻辑:检查经纬度和海拔的差值是否在容差范围内
+                if (fabsf(p->lon - target.lon) <= MATCH_EPSILON_DEG &&
+                    fabsf(p->lat - target.lat) <= MATCH_EPSILON_DEG &&
+                    fabsf(p->alt - target.alt) <= MATCH_EPSILON_ALT) {
+
+                    // === 找到了!===
+                    result.seg_index = s_idx;
+                    result.point_index = processed_in_seg + k;
+
+                    // 清理资源并返回
+                    goto cleanup_success;
+                }
+            }
+            processed_in_seg += chunk;
+        }
+    }
+cleanup_success:
+    free(cache);
+    fclose(fp);
+    return result;
+}
+
+void test_search() {
+    // 假设你从 GPS 获得了一个点
+    GeoPoint my_gps_data = { 113.273455f, 23.180013f, 22.8f };
+
+    SearchResult res = find_point_index(FILE_LINE_NAME, my_gps_data);
+
+    if (res.seg_index != -1) {
+        printf("找到目标!\n");
+        printf("位于第 %d 段

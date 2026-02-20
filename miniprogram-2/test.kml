@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Test KML File</name>
+    <description>This is a test KML file for compression testing</description>
+    
+    <Style id="pointStyle">
+      <IconStyle>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+    
+    <Style id="lineStyle">
+      <LineStyle>
+        <color>ff0000ff</color>
+        <width>2</width>
+      </LineStyle>
+    </Style>
+    
+    <Style id="polygonStyle">
+      <PolyStyle>
+        <color>400000ff</color>
+      </PolyStyle>
+    </Style>
+    
+    <Placemark>
+      <name>Point 1</name>
+      <description>First test point</description>
+      <styleUrl>#pointStyle</styleUrl>
+      <Point>
+        <coordinates>116.404,39.915,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <Placemark>
+      <name>Point 2</name>
+      <description>Second test point</description>
+      <styleUrl>#pointStyle</styleUrl>
+      <Point>
+        <coordinates>116.414,39.925,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <Placemark>
+      <name>Line String</name>
+      <description>Test line string with multiple points</description>
+      <styleUrl>#lineStyle</styleUrl>
+      <LineString>
+        <coordinates>
+          116.404,39.915,0
+          116.414,39.925,0
+          116.424,39.935,0
+          116.434,39.945,0
+          116.444,39.955,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+    
+    <Placemark>
+      <name>Polygon</name>
+      <description>Test polygon with outer boundary</description>
+      <styleUrl>#polygonStyle</styleUrl>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              116.404,39.915,0
+              116.414,39.915,0
+              116.414,39.925,0
+              116.404,39.925,0
+              116.404,39.915,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

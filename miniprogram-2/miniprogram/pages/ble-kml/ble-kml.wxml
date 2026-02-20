@@ -1,0 +1,162 @@
+<!--ble-kml.wxml-->
+<navigation-bar title="BLE KML 发送" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y style="height: calc(100vh - 100rpx);">
+  <view class="container">
+    <!-- 1. 选择 KML 文件 -->
+    <view class="section">
+      <view class="section-title">1. 选择 KML 文件</view>
+      <button class="btn btn-primary" bindtap="onChooseKml">选择 KML 文件</button>
+      <view wx:if="{{kmlFile}}" class="file-info">
+        已选: {{kmlFile.name}} ({{kmlFile.size}} 字节)
+      </view>
+      <button wx:if="{{kmlFile}}" class="btn btn-verify" bindtap="onVerifyPayload">校验发送内容</button>
+      <view wx:if="{{verifyResult}}" class="verify-result">{{verifyResult}}</view>
+    </view>
+
+    <!-- 2. 扫描并连接 BLE 设备 -->
+    <view class="section">
+      <view class="section-title">2. 扫描并连接 BLE 设备</view>
+      <view wx:if="{{status === 'scanning'}}">
+        <button class="btn btn-secondary" bindtap="onScanStop">停止扫描</button>
+        <view class="status-text">{{statusText}}</view>
+        <view class="device-list">
+          <view
+            wx:for="{{devices}}"
+            wx:key="deviceId"
+            class="device-item"
+            data-device-id="{{item.deviceId}}"
+            data-device-name="{{item.name}}"
+            bindtap="onSelectDevice"
+          >
+            <text class="device-name">{{item.name}}</text>
+            <text class="device-id">{{item.deviceId}}</text>
+          </view>
+          <view wx:if="{{devices.length === 0}}" class="empty-tip">未发现设备，请确保设备已开启并处于可发现状态</view>
+        </view>
+      </view>
+      <view wx:else>
+        <button class="btn btn-primary" bindtap="onScanStart">开始扫描</button>
+        <view wx:if="{{selectedDevice}}" class="connected-info">
+          已连接: {{selectedDevice.name}}
+          <button class="btn btn-small" bindtap="onDisconnect">断开</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 3. 发送 -->
+    <view class="section">
+      <view class="section-title">3. 发送 KML（分包 + 结束符 0xFF 0xFF 0xFF）</view>
+      <view class="compress-option">
+        <checkbox value="compress" checked="{{compress}}" bindchange="onCompressChange" /> 启用转换（减少传输时间）
+      </view>
+      <button
+    class="btn btn-secondary"
+    disabled="{{!kmlFile || status === 'sending'}}"
+    bindtap="onCalculateCRC"
+  >
+    计算CRC
+  </button>
+  <button
+    class="btn btn-secondary"
+    bindtap="onTestConvert"
+  >
+    测试转换
+  </button>
+      <view class="crc-info" wx:if="{{crcInfo}}">
+        <view class="crc-item">压缩前 CRC32: {{crcInfo.original}}</view>
+        <view class="crc-item">压缩后 CRC32: {{crcInfo.compressed}}</view>
+      </view>
+      <button
+        class="btn btn-primary"
+        disabled="{{!kmlFile || !selectedDevice || status === 'sending'}}"
+        bindtap="onSendKml"
+      >
+        {{status === 'sending' ? '发送中...' : '发送 KML'}}
+      </button>
+      <button
+        class="btn btn-secondary"
+        disabled="{{!kmlFile || status === 'sending'}}"
+        bindtap="onSimulateSendKml"
+      >
+        {{status === 'sending' ? '发送中...' : '模拟发送（测试进度）'}}
+      </button>
+      <view wx:if="{{status === 'sending' || status === 'done'}}" class="progress-area">
+        <progress percent="{{progress}}" stroke-width="6" activeColor="#07c160" backgroundColor="#e0e0e0" />
+        <text class="progress-text">{{progressText}}</text>
+        <view wx:if="{{status === 'sending'}}" class="progress-details">
+          <text class="speed-text">{{speedText}}</text>
+          <text class="time-left-text">{{timeLeftText}}</text>
+        </view>
+      </view>
+      <view wx:if="{{status === 'done'}}" class="done-tip">整段 KML 已发送，末尾已追加 0xFF 0xFF 0xFF</view>
+    </view>
+
+    <!-- 错误信息 -->
+    <view wx:if="{{errorMsg}}" class="error-msg">{{errorMsg}}</view>
+
+
+
+    <!-- 4. 串口助手 -->
+    <view class="section">
+      <view class="section-title">4. 串口助手</view>
+      
+      <!-- 接收区 -->
+      <view class="serial-section">
+        <view class="serial-title">接收区</view>
+        <view class="serial-controls">
+          <view class="mode-buttons">
+            <button 
+              class="mode-btn {{serialPort.receiveMode === 'text' ? 'mode-btn-active' : ''}}"
+              data-mode="text"
+              bindtap="onReceiveModeChange"
+            >
+              文本模式
+            </button>
+            <button 
+              class="mode-btn {{serialPort.receiveMode === 'hex' ? 'mode-btn-active' : ''}}"
+              data-mode="hex"
+              bindtap="onReceiveModeChange"
+            >
+              十六进制
+            </button>
+          </view>
+          <button class="btn btn-small" bindtap="onClearReceive">清空接收区</button>
+        </view>
+        <scroll-view class="receive-area" scroll-y>
+          <text class="receive-text">{{serialPort.receiveData || '等待接收数据...'}}</text>
+        </scroll-view>
+      </view>
+
+      <!-- 发送区 -->
+      <view class="serial-section">
+        <view class="serial-title">发送区</view>
+        <view class="serial-controls">
+          <view class="mode-buttons">
+            <button 
+              class="mode-btn {{serialPort.sendMode === 'text' ? 'mode-btn-active' : ''}}"
+              data-mode="text"
+              bindtap="onSendModeChange"
+            >
+              文本模式
+            </button>
+            <button 
+              class="mode-btn {{serialPort.sendMode === 'hex' ? 'mode-btn-active' : ''}}"
+              data-mode="hex"
+              bindtap="onSendModeChange"
+            >
+              十六进制
+            </button>
+          </view>
+          <button class="btn btn-small" bindtap="onClearSend">清空发送区</button>
+        </view>
+        <textarea 
+          class="send-area" 
+          placeholder="请输入要发送的数据..."
+          value="{{serialPort.sendData}}"
+          bindinput="onSendDataChange"
+        ></textarea>
+        <button class="btn btn-primary" bindtap="onSendSerialData">发送</button>
+      </view>
+    </view>
+  </view>
+</scroll-view>

@@ -1,0 +1,6 @@
+../Core/Src/freertos.c:125:6:vApplicationTickHook	8	static
+../Core/Src/freertos.c:142:6:MX_FREERTOS_Init	8	static
+../Core/Src/freertos.c:193:6:StartTaskMain	24	static
+../Core/Src/freertos.c:241:6:StartGPSTask	24	static
+../Core/Src/freertos.c:275:6:StartTaskHR	16	static
+../Core/Src/freertos.c:295:6:StartBLEKMLTask	152	static

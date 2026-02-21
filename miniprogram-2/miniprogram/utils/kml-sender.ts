@@ -457,11 +457,6 @@ export async function sendKmlBufferToBle(
 
       // 发送当前及后续数据包
       for (let i = currentChunkIndex; i < allChunks.length; i++) {
-        // 每发送10个包，暂停一段时间，避免连接超时
-        if (i > 0 && i % 10 === 0) {
-          console.log('Pausing for 500ms to avoid connection timeout')
-          await delay(500)
-        }
 
         const chunk = allChunks[i]
         console.log('Sending chunk', i + 1, 'of', allChunks.length, 'size:', chunk.byteLength)

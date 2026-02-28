@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KML转Bin文件</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border: 1px solid #add8e6;
+            border-radius: 4px;
+        }
+        .file-info {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e8f4f8;
+            border: 1px solid #b8e0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KML转Bin文件工具</h1>
+        
+        <div class="form-group">
+            <label for="kmlFile">上传KML文件：</label>
+            <input type="file" id="kmlFile" accept=".kml">
+            <div id="fileInfo" class="file-info" style="display: none;"></div>
+        </div>
+        
+        <button onclick="convertKmlToBin()">转换为Bin文件</button>
+        
+        <div class="result" id="result" style="display: none;">
+            <h3>转换结果：</h3>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // 解析KML内容，提取点和线数据
+        function parseKmlContent(text) {
+            const points = [];
+            const lines = [];
+            
+            // 提取Point数据
+            const pointRegex = /<Point[\s\S]*?<coordinates>([\s\S]*?)<\/coordinates>[\s\S]*?<\/Point>/g;
+            let match;
+            while ((match = pointRegex.exec(text)) !== null) {
+                const coordData = match[1].trim();
+                const point = parseCoordinate(coordData);
+                if (point) {
+                    points.push(point);
+                }
+            }
+            
+            // 提取LineString数据
+            const lineRegex = /<LineString[\s\S]*?<coordinates>([\s\S]*?)<\/coordinates>[\s\S]*?<\/LineString>/g;
+            while ((match = lineRegex.exec(text)) !== null) {
+                const coordData = match[1].trim();
+                const linePoints = parseCoordinates(coordData);
+                if (linePoints.length > 0) {
+                    lines.push({ points: linePoints });
+                }
+            }
+            
+            return { points, lines };
+        }
+
+        // 解析单个坐标
+        function parseCoordinate(coordData) {
+            const parts = coordData.split(',');
+            if (parts.length >= 2) {
+                const lon = parseFloat(parts[0]);
+                const lat = parseFloat(parts[1]);
+                const alt = parts.length >= 3 ? parseFloat(parts[2]) : 0;
+                
+                if (!isNaN(lon) && !isNaN(lat)) {
+                    return { lon, lat, alt: isNaN(alt) ? 0 : alt };
+                }
+            }
+            return null;
+        }
+
+        // 解析多个坐标
+        function parseCoordinates(coordData) {
+            const result = [];
+            const coords = coordData.split(/\s+/).filter(c => c.length > 0);
+            
+            for (const coord of coords) {
+                const point = parseCoordinate(coord);
+                if (point) {
+                    result.push(point);
+                }
+            }
+            
+            return result;
+        }
+
+        // 写入GeoPoint数据
+        function writeGeoPoint(buffer, offset, point) {
+            const view = new DataView(new ArrayBuffer(12));
+            view.setFloat32(0, point.lon, true);
+            view.setFloat32(4, point.lat, true);
+            view.setFloat32(8, point.alt, true);
+            
+            const uint8View = new Uint8Array(view.buffer);
+            for (let i = 0; i < 12; i++) {
+                buffer[offset + i] = uint8View[i];
+            }
+        }
+
+        // 写入Uint32数据
+        function writeUint32(buffer, offset, value) {
+            const view = new DataView(new ArrayBuffer(4));
+            view.setUint32(0, value, true);
+            const uint8View = new Uint8Array(view.buffer);
+            for (let i = 0; i < 4; i++) {
+                buffer[offset + i] = uint8View[i];
+            }
+        }
+
+        // 生成点数据的二进制文件
+        function generatePointsBinaryData(points, compress = false) {
+            let totalSize = 0;
+            totalSize += 4; // 总点数
+            if (compress) {
+                totalSize += 12 + points.length * 9;
+            } else {
+                totalSize += points.length * 12;
+            }
+            
+            const buffer = new Uint8Array(totalSize);
+            let offset = 0;
+            
+            const totalPoints = points.length;
+            writeUint32(buffer, offset, totalPoints);
+            offset += 4;
+            
+            if (compress) {
+                // 简化版压缩，实际项目中使用完整的压缩算法
+                if (points.length > 0) {
+                    const firstPoint = points[0];
+                    writeGeoPoint(buffer, offset, firstPoint);
+                    offset += 12;
+                }
+            } else {
+                for (const point of points) {
+                    writeGeoPoint(buffer, offset, point);
+                    offset += 12;
+                }
+            }
+            
+            return buffer.slice(0, offset);
+        }
+
+        // 生成线数据的二进制文件
+        function generateLinesBinaryData(lines, compress = false) {
+            let totalSize = 0;
+            totalSize += 4; // 总段数
+            for (const line of lines) {
+                totalSize += 4; // 段点数
+                if (compress) {
+                    totalSize += 12 + line.points.length * 9;
+                } else {
+                    totalSize += line.points.length * 12;
+                }
+            }
+            
+            const buffer = new Uint8Array(totalSize);
+            let offset = 0;
+            
+            const totalSegments = lines.length;
+            writeUint32(buffer, offset, totalSegments);
+            offset += 4;
+            
+            for (const line of lines) {
+                const pointCount = line.points.length;
+                writeUint32(buffer, offset, pointCount);
+                offset += 4;
+                
+                if (compress) {
+                    // 简化版压缩，实际项目中使用完整的压缩算法
+                    if (line.points.length > 0) {
+                        const firstPoint = line.points[0];
+                        writeGeoPoint(buffer, offset, firstPoint);
+                        offset += 12;
+                    }
+                } else {
+                    for (const point of line.points) {
+                        writeGeoPoint(buffer, offset, point);
+                        offset += 12;
+                    }
+                }
+            }
+            
+            return buffer.slice(0, offset);
+        }
+
+        // 将KML转换为bin文件
+        function convertKmlToBinInternal(text) {
+            const { points, lines } = parseKmlContent(text);
+            const pointsBinaryData = generatePointsBinaryData(points, false);
+            const linesBinaryData = generateLinesBinaryData(lines, false);
+            return { pointsBuffer: pointsBinaryData.buffer, linesBuffer: linesBinaryData.buffer };
+        }
+
+        // 保存文件
+        function saveFile(buffer, filename) {
+            const blob = new Blob([buffer], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 读取文件内容
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('读取文件失败'));
+                reader.readAsText(file);
+            });
+        }
+
+        // 文件选择事件
+        document.getElementById('kmlFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileInfo = document.getElementById('fileInfo');
+                fileInfo.innerHTML = `
+                    <p>文件名: ${file.name}</p>
+                    <p>文件大小: ${(file.size / 1024).toFixed(2)} KB</p>
+                    <p>类型: ${file.type || '未知'}</p>
+                `;
+                fileInfo.style.display = 'block';
+            }
+        });
+
+        // 主转换函数
+        async function convertKmlToBin() {
+            const fileInput = document.getElementById('kmlFile');
+            const file = fileInput.files[0];
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            if (!file) {
+                resultContent.innerHTML = '<p style="color: red;">请先选择一个KML文件</p>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                // 读取文件内容
+                const kmlContent = await readFile(file);
+                
+                // 转换为bin文件
+                const { pointsBuffer, linesBuffer } = convertKmlToBinInternal(kmlContent);
+                
+                // 保存点文件
+                const pointsFilename = file.name.replace('.kml', '-points.bin');
+                saveFile(pointsBuffer, pointsFilename);
+                
+                // 保存线文件
+                const linesFilename = file.name.replace('.kml', '-lines.bin');
+                saveFile(linesBuffer, linesFilename);
+                
+                // 显示结果
+                resultContent.innerHTML = `
+                    <p>转换成功！</p>
+                    <p>输入文件: ${file.name}</p>
+                    <p>点文件: ${pointsFilename} (${pointsBuffer.byteLength} 字节)</p>
+                    <p>线文件: ${linesFilename} (${linesBuffer.byteLength} 字节)</p>
+                    <p>文件已开始下载...</p>
+                `;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultContent.innerHTML = `<p style="color: red;">转换失败: ${error.message}</p>`;
+                resultDiv.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

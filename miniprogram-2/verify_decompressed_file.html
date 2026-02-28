@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KML与BIN文件对比工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .file-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .file-section h2 {
+            margin-top: 0;
+            color: #555;
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .file-info {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .hex-preview {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KML与BIN文件对比工具</h1>
+        
+        <div class="file-section">
+            <h2>1. 上传KML文件</h2>
+            <div class="file-input">
+                <input type="file" id="kmlFile" accept=".kml">
+                <div id="kmlInfo" class="file-info"></div>
+            </div>
+        </div>
+        
+        <div class="file-section">
+            <h2>2. 上传BIN文件</h2>
+            <div class="file-input">
+                <input type="file" id="binFile" accept=".bin">
+                <div id="binInfo" class="file-info"></div>
+            </div>
+        </div>
+        
+        <div class="file-section">
+            <h2>3. 执行对比</h2>
+            <button onclick="compareFiles()">开始对比</button>
+        </div>
+        
+        <div class="file-section">
+            <h2>4. 对比结果</h2>
+            <div id="result" class="result"></div>
+        </div>
+        
+        <div class="file-section">
+            <h2>5. 数据预览</h2>
+            <div>
+                <h3>KML转换后的BIN文件前16字节：</h3>
+                <div id="kmlBinPreview" class="hex-preview"></div>
+            </div>
+            <div>
+                <h3>上传的BIN文件前16字节：</h3>
+                <div id="uploadedBinPreview" class="hex-preview"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 读取文件内容
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('读取文件失败'));
+                reader.readAsText(file);
+            });
+        }
+        
+        // 读取二进制文件
+        function readBinaryFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('读取文件失败'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // 显示文件信息
+        function showFileInfo(file, infoElementId) {
+            const infoElement = document.getElementById(infoElementId);
+            infoElement.innerHTML = `
+                <p>文件名: ${file.name}</p>
+                <p>文件大小: ${(file.size / 1024).toFixed(2)} KB</p>
+                <p>类型: ${file.type || '未知'}</p>
+            `;
+        }
+        
+        // 显示十六进制预览
+        function showHexPreview(buffer, previewElementId) {
+            const previewElement = document.getElementById(previewElementId);
+            const view = new Uint8Array(buffer);
+            const hexString = Array.from(view.slice(0, 16))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join(' ');
+            previewElement.textContent = hexString;
+        }
+        
+        // 解析KML内容
+        function parseKmlContent(text) {
+            const points = [];
+            const lines = [];
+            
+            // 提取LineString数据
+            const lineRegex = /<LineString[\s\S]*?<coordinates>([\s\S]*?)<\/coordinates>[\s\S]*?<\/LineString>/g;
+            let match;
+            while ((match = lineRegex.exec(text)) !== null) {
+                const coordData = match[1].trim();
+                const linePoints = parseCoordinates(coordData);
+                if (linePoints.length > 0) {
+                    lines.push({ points: linePoints });
+                }
+            }
+            
+            return { points, lines };
+        }
+        
+        // 解析多个坐标
+        function parseCoordinates(coordData) {
+            const result = [];
+            const coords = coordData.split(/\s+/).filter(c => c.length > 0);
+            
+            for (const coord of coords) {
+                const point = parseCoordinate(coord);
+                if (point) {
+                    result.push(point);
+                }
+            }
+            
+            return result;
+        }
+        
+        // 解析单个坐标
+        function parseCoordinate(coordData) {
+            const parts = coordData.split(',');
+            if (parts.length >= 2) {
+                const lon = parseFloat(parts[0]);
+                const lat = parseFloat(parts[1]);
+                const alt = parts.length >= 3 ? parseFloat(parts[2]) : 0;
+                
+                if (!isNaN(lon) && !isNaN(lat)) {
+                    return { lon, lat, alt: isNaN(alt) ? 0 : alt };
+                }
+            }
+            return null;
+        }
+        
+        // float转int32函数
+        function floatToInt32(value) {
+            return Math.round(value * 1000000);
+        }
+        
+        // 写入Int32数据
+        function writeInt32(buffer, offset, value) {
+            const view = new DataView(new ArrayBuffer(4));
+            view.setInt32(0, value, true);
+            const uint8View = new Uint8Array(view.buffer);
+            for (let i = 0; i < 4; i++) {
+                buffer[offset + i] = uint8View[i];
+            }
+        }
+        
+        // 写入Uint32数据
+        function writeUint32(buffer, offset, value) {
+            const view = new DataView(new ArrayBuffer(4));
+            view.setUint32(0, value, true);
+            const uint8View = new Uint8Array(view.buffer);
+            for (let i = 0; i < 4; i++) {
+                buffer[offset + i] = uint8View[i];
+            }
+        }
+        
+        // 生成二进制数据
+        function generateBinaryData(points, lines, compress = false) {
+            let totalSize = 4; // 总段数
+            for (const line of lines) {
+                totalSize += 4; // 段点数
+                totalSize += line.points.length * 12;
+            }
+            
+            const buffer = new Uint8Array(totalSize);
+            let offset = 0;
+            
+            const totalSegments = lines.length;
+            writeUint32(buffer, offset, totalSegments);
+            offset += 4;
+            
+            for (const line of lines) {
+                const pointCount = line.points.length;
+                writeUint32(buffer, offset, pointCount);
+                offset += 4;
+                
+                for (const point of line.points) {
+                    const lonInt = floatToInt32(point.lon);
+                    const latInt = floatToInt32(point.lat);
+                    const altInt = floatToInt32(point.alt);
+                    
+                    writeInt32(buffer, offset, lonInt);
+                    offset += 4;
+                    writeInt32(buffer, offset, latInt);
+                    offset += 4;
+                    writeInt32(buffer, offset, altInt);
+                    offset += 4;
+                }
+            }
+            
+            return buffer.slice(0, offset);
+        }
+        
+        // 将KML转换为bin文件
+        function convertKmlToBin(text) {
+            const { points, lines } = parseKmlContent(text);
+            const binaryData = generateBinaryData(points, lines, false);
+            return binaryData.buffer;
+        }
+        
+        // 比较两个ArrayBuffer是否相等
+        function compareBuffers(buffer1, buffer2) {
+            if (buffer1.byteLength !== buffer2.byteLength) {
+                return { 
+                    equal: false, 
+                    message: `长度不一致：${buffer1.byteLength} 字节 vs ${buffer2.byteLength} 字节`
+                };
+            }
+            
+            const view1 = new Uint8Array(buffer1);
+            const view2 = new Uint8Array(buffer2);
+            
+            for (let i = 0; i < view1.length; i++) {
+                if (view1[i] !== view2[i]) {
+                    return { 
+                        equal: false, 
+                        message: `第${i}字节不一致：0x${view1[i].toString(16).padStart(2, '0')} vs 0x${view2[i].toString(16).padStart(2, '0')}`,
+                        position: i
+                    };
+                }
+            }
+            
+            return { equal: true, message: '内容完全一致' };
+        }
+        
+        // 执行对比
+        async function compareFiles() {
+            const kmlFile = document.getElementById('kmlFile').files[0];
+            const binFile = document.getElementById('binFile').files[0];
+            
+            if (!kmlFile) {
+                showResult('请上传KML文件', 'error');
+                return;
+            }
+            
+            if (!binFile) {
+                showResult('请上传BIN文件', 'error');
+                return;
+            }
+            
+            try {
+                // 读取KML文件
+                const kmlContent = await readFile(kmlFile);
+                
+                // 转换KML为BIN
+                const kmlBinBuffer = convertKmlToBin(kmlContent);
+                
+                // 读取上传的BIN文件
+                const uploadedBinBuffer = await readBinaryFile(binFile);
+                
+                // 显示预览
+                showHexPreview(kmlBinBuffer, 'kmlBinPreview');
+                showHexPreview(uploadedBinBuffer, 'uploadedBinPreview');
+                
+                // 对比两个BIN文件
+                const comparison = compareBuffers(kmlBinBuffer, uploadedBinBuffer);
+                
+                if (comparison.equal) {
+                    showResult(`对比成功！两个文件内容完全一致。\nKML转换后大小：${kmlBinBuffer.byteLength} 字节\n上传的BIN文件大小：${uploadedBinBuffer.byteLength} 字节`, 'success');
+                } else {
+                    showResult(`对比失败！${comparison.message}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`错误：${error.message}`, 'error');
+            }
+        }
+        
+        // 显示结果
+        function showResult(message, type) {
+            const resultElement = document.getElementById('result');
+            resultElement.className = `result ${type}`;
+            resultElement.innerHTML = `<p>${message}</p>`;
+        }
+        
+        // 监听文件选择
+        document.getElementById('kmlFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                showFileInfo(file, 'kmlInfo');
+            }
+        });
+        
+        document.getElementById('binFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                showFileInfo(file, 'binInfo');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -22,7 +22,11 @@ import {
   verifyChunkedPayload,
   calculateCRC32,
   SendProgress,
-  compressText
+  compressText,
+  decompress,
+  convertKmlToBin,
+  compressBinFile,
+  compareBuffers
 } from '../../utils/kml-sender'
 
 interface BLEDeviceInfo {
@@ -167,25 +171,59 @@ Component({
       console.log('原始文件长度:', fileContent.length)
       console.log('原始文件前50字符:', fileContent.substring(0, 50))
       
-      // 使用实际的转换算法
-      const convertedData = compressText(fileContent)
-      console.log('转换后数据长度:', convertedData.byteLength)
-      console.log('转换率:', ((1 - convertedData.byteLength / fileContent.length) * 100).toFixed(2) + '%')
+      // 步骤1：将KML转换为bin文件（不压缩）
+      console.log('\n步骤1：将KML转换为bin文件（不压缩）')
+      const binBuffer = convertKmlToBin(fileContent)
+      console.log('转换后bin文件大小:', binBuffer.byteLength, '字节')
       
       // 验证转换后的数据格式
-      const view = new Uint8Array(convertedData)
-      console.log('转换后数据前16字节:', Array.from(view.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '))
+      const binView = new Uint8Array(binBuffer)
+      console.log('转换后bin文件前16字节:', Array.from(binView.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '))
       
-      // 检查数据格式是否符合PC端要求
-      // 这里可以添加更详细的格式验证逻辑
+      // 步骤2：验证转换后bin文件的正确性
+      console.log('\n步骤2：验证转换后bin文件的正确性')
+      const convertSuccess = this._validateBinFile(binBuffer)
+      console.log('转换是否成功:', convertSuccess ? '✓' : '✗')
       
-      // 验证结果
-      if (convertedData.byteLength > 0) {
-        console.log('🎉 测试通过！转换算法正确。')
-        wx.showToast({ title: '测试通过！转换算法正确', icon: 'success' })
+      // 步骤3：对bin文件进行压缩
+      console.log('\n步骤3：对bin文件进行压缩')
+      const compressedBuffer = compressBinFile(binBuffer)
+      console.log('压缩后文件大小:', compressedBuffer.byteLength, '字节')
+      console.log('压缩率:', ((1 - compressedBuffer.byteLength / binBuffer.byteLength) * 100).toFixed(2) + '%')
+      
+      // 验证压缩后的数据格式
+      const compressedView = new Uint8Array(compressedBuffer)
+      console.log('压缩后文件前16字节:', Array.from(compressedView.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '))
+      
+      // 步骤4：解压压缩后的文件
+      console.log('\n步骤4：解压压缩后的文件')
+      const decompressedBuffer = decompress(compressedBuffer)
+      console.log('解压后文件大小:', decompressedBuffer.byteLength, '字节')
+      
+      // 步骤5：验证解压后的文件与转换后的bin文件是否一致
+      console.log('\n步骤5：验证解压后的文件与转换后的bin文件是否一致')
+      const isSame = compareBuffers(binBuffer, decompressedBuffer)
+      console.log('解压后与转换后文件是否一致:', isSame)
+      
+      // 验证解压是否成功
+      const decompressSuccess = isSame
+      console.log('解压是否成功:', decompressSuccess ? '✓' : '✗')
+      
+      if (convertSuccess && decompressSuccess) {
+        console.log('🎉 测试通过！转换和压缩算法正确。')
+        wx.showToast({ title: '测试通过！转换和压缩算法正确', icon: 'success' })
       } else {
-        console.log('❌ 测试失败！转换算法有问题。')
-        wx.showToast({ title: '测试失败！转换算法有问题', icon: 'none' })
+        console.log('❌ 测试失败！')
+        if (!convertSuccess) {
+          console.log('转换失败：转换后文件格式不正确')
+          wx.showToast({ title: '测试失败！转换后文件格式不正确', icon: 'none' })
+        } else if (!decompressSuccess) {
+          console.log('解压失败：解压后文件与转换后文件不一致')
+          wx.showToast({ title: '测试失败！解压后文件与转换后文件不一致', icon: 'none' })
+        } else {
+          console.log('测试失败：未知错误')
+          wx.showToast({ title: '测试失败！未知错误', icon: 'none' })
+        }
       }
       
     } catch (err: unknown) {
@@ -853,6 +891,79 @@ Component({
       return err instanceof Error ? err.message : '未知错误'
     },
 
+    /**
+     * 验证bin文件的正确性
+     */
+    _validateBinFile(binBuffer: ArrayBuffer): boolean {
+      try {
+        const view = new Uint8Array(binBuffer)
+        let offset = 0
+        
+        // 检查文件大小是否至少包含总段数字段
+        if (view.length < 4) {
+          console.log('验证失败：文件太小，缺少总段数字段')
+          return false
+        }
+        
+        // 读取总段数
+        const totalSegments = this._readUint32(view, offset)
+        offset += 4
+        
+        if (totalSegments < 0) {
+          console.log('验证失败：总段数无效')
+          return false
+        }
+        
+        // 检查每一段
+        for (let i = 0; i < totalSegments; i++) {
+          // 检查是否有足够的空间读取段点数
+          if (offset + 4 > view.length) {
+            console.log('验证失败：文件格式错误，缺少段点数字段')
+            return false
+          }
+          
+          // 读取段点数
+          const pointCount = this._readUint32(view, offset)
+          offset += 4
+          
+          if (pointCount < 0) {
+            console.log('验证失败：段点数无效')
+            return false
+          }
+          
+          // 检查是否有足够的空间读取点数据
+          const expectedPointDataSize = pointCount * 12 // 每个点12字节
+          if (offset + expectedPointDataSize > view.length) {
+            console.log('验证失败：文件格式错误，缺少点数据')
+            return false
+          }
+          
+          offset += expectedPointDataSize
+        }
+        
+        // 检查是否读取完整个文件
+        if (offset !== view.length) {
+          console.log('验证失败：文件大小与计算的大小不一致')
+          return false
+        }
+        
+        return true
+      } catch (error) {
+        console.log('验证失败：', error)
+        return false
+      }
+    },
+
+    /**
+     * 读取Uint32数据（little-endian）
+     */
+    _readUint32(buffer: Uint8Array, offset: number): number {
+      const view = new DataView(new ArrayBuffer(4))
+      for (let i = 0; i < 4; i++) {
+        view.setUint8(i, buffer[offset + i])
+      }
+      return view.getUint32(0, true)
+    }
 
   }
 })

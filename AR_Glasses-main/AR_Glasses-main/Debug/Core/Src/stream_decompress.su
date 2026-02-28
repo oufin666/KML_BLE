@@ -1,0 +1,9 @@
+../Core/Src/stream_decompress.c:30:17:read_uint32_le	16	static
+../Core/Src/stream_decompress.c:37:13:write_uint32_le	16	static
+../Core/Src/stream_decompress.c:47:16:read_int32_le	16	static
+../Core/Src/stream_decompress.c:54:13:write_int32_le	16	static
+../Core/Src/stream_decompress.c:67:9:decode_delta	40	static
+../Core/Src/stream_decompress.c:105:12:read_bytes	32	static
+../Core/Src/stream_decompress.c:117:12:write_buffered	40	static
+../Core/Src/stream_decompress.c:141:12:flush_buffer	32	static
+../Core/Src/stream_decompress.c:160:5:stream_decompress_file	1968	static

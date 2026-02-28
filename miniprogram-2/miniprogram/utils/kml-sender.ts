@@ -180,17 +180,213 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * PC端兼容的KML文件转换算法
- * 生成与PC端解析器兼容的二进制格式
+ * 将KML文件转换为与PC端兼容的bin文件（不压缩）
  */
-export function compressText(text: string): ArrayBuffer {
+export function convertKmlToBin(text: string): ArrayBuffer {
   // 解析KML文件，提取点和线数据
   const { points, lines } = parseKmlContent(text)
   
-  // 生成二进制数据
-  const binaryData = generateBinaryData(points, lines)
+  // 生成二进制数据（不压缩）
+  const binaryData = generateBinaryData(points, lines, false)
   
   return binaryData.buffer
+}
+
+/**
+ * 对转换后的bin文件进行压缩
+ */
+export function compressBinFile(binBuffer: ArrayBuffer): ArrayBuffer {
+  const view = new Uint8Array(binBuffer)
+  let offset = 0
+  
+  // 读取总段数
+  const totalSegments = readUint32(view, offset)
+  offset += 4
+  
+  // 计算压缩后的数据大小
+  let totalSize = 4 // 总段数
+  
+  // 收集所有段的点数据和原始段点数
+  const segments: { pointCount: number; points: { lon: number; lat: number; alt: number }[] }[] = []
+  
+  for (let i = 0; i < totalSegments; i++) {
+    const pointCount = readUint32(view, offset)
+    offset += 4
+    totalSize += 4 // 段点数
+    
+    const points: { lon: number; lat: number; alt: number }[] = []
+    
+    for (let j = 0; j < pointCount; j++) {
+      const lonInt = readInt32(view, offset)
+      offset += 4
+      const latInt = readInt32(view, offset)
+      offset += 4
+      const altInt = readInt32(view, offset)
+      offset += 4
+      
+      // 转换为浮点数
+      const lon = int32ToFloat(lonInt)
+      const lat = int32ToFloat(latInt)
+      const alt = int32ToFloat(altInt)
+      
+      points.push({ lon, lat, alt })
+    }
+    
+    segments.push({ pointCount, points })
+    totalSize += 12 + points.length * 9 // 估算压缩后的大小
+  }
+  
+  // 分配缓冲区
+  const compressedBuffer = new Uint8Array(totalSize)
+  let compressedOffset = 0
+  
+  // 写入总段数
+  writeUint32(compressedBuffer, compressedOffset, totalSegments)
+  compressedOffset += 4
+  
+  // 压缩每一段
+  for (const segment of segments) {
+    // 写入原始段点数，保持与原文件一致
+    writeUint32(compressedBuffer, compressedOffset, segment.pointCount)
+    compressedOffset += 4
+    
+    // 压缩点数据
+    const pointsCompressed = compressPoints(segment.points)
+    compressedBuffer.set(pointsCompressed, compressedOffset)
+    compressedOffset += pointsCompressed.length
+  }
+  
+  // 裁剪到实际大小
+  return compressedBuffer.slice(0, compressedOffset).buffer
+}
+
+/**
+ * PC端兼容的KML文件转换算法（组合转换和压缩）
+ * 生成与PC端解析器兼容的二进制格式
+ */
+export function compressText(text: string): ArrayBuffer {
+  // 先转换为bin文件
+  const binBuffer = convertKmlToBin(text)
+  // 再压缩
+  return compressBinFile(binBuffer)
+}
+
+/**
+ * 解压压缩后的bin文件
+ */
+export function decompress(compressedBuffer: ArrayBuffer): ArrayBuffer {
+  const view = new Uint8Array(compressedBuffer)
+  let offset = 0
+  
+  // 读取总段数
+  const totalSegments = readUint32(view, offset)
+  offset += 4
+  
+  // 计算解压后的数据大小
+  let totalPoints = 0
+  const segmentOffsets: number[] = []
+  const segmentPointCounts: number[] = []
+  
+  // 先读取所有段的点数
+  for (let i = 0; i < totalSegments; i++) {
+    segmentOffsets.push(offset)
+    const pointCount = readUint32(view, offset)
+    segmentPointCounts.push(pointCount)
+    totalPoints += pointCount
+    offset += 4
+  }
+  
+  // 计算解压后的数据大小
+  const decompressedSize = 4 + totalSegments * 4 + totalPoints * 12
+  const decompressedBuffer = new Uint8Array(decompressedSize)
+  let decompressedOffset = 0
+  
+  // 写入总段数
+  writeUint32(decompressedBuffer, decompressedOffset, totalSegments)
+  decompressedOffset += 4
+  
+  // 解压每一段
+  for (let i = 0; i < totalSegments; i++) {
+    const pointCount = segmentPointCounts[i]
+    const segmentStart = segmentOffsets[i] + 4 // 跳过段点数
+    
+    // 写入段点数
+    writeUint32(decompressedBuffer, decompressedOffset, pointCount)
+    decompressedOffset += 4
+    
+    // 提取当前段的压缩数据
+    let segmentEnd = i < totalSegments - 1 ? segmentOffsets[i + 1] : view.length
+    const segmentData = view.slice(segmentStart, segmentEnd)
+    
+    // 解压点数据
+    const points = decompressPoints(segmentData, pointCount)
+    
+    // 写入解压后的点数据（使用int32格式，与原文件一致）
+    for (const point of points) {
+      const lonInt = floatToInt32(point.lon)
+      const latInt = floatToInt32(point.lat)
+      const altInt = floatToInt32(point.alt)
+      
+      writeInt32(decompressedBuffer, decompressedOffset, lonInt)
+      decompressedOffset += 4
+      writeInt32(decompressedBuffer, decompressedOffset, latInt)
+      decompressedOffset += 4
+      writeInt32(decompressedBuffer, decompressedOffset, altInt)
+      decompressedOffset += 4
+    }
+  }
+  
+  return decompressedBuffer.buffer
+}
+
+/**
+ * 比较两个ArrayBuffer是否相等
+ */
+export function compareBuffers(buffer1: ArrayBuffer, buffer2: ArrayBuffer): boolean {
+  if (buffer1.byteLength !== buffer2.byteLength) {
+    console.log('比较失败：长度不一致', buffer1.byteLength, 'vs', buffer2.byteLength)
+    return false
+  }
+  
+  const view1 = new Uint8Array(buffer1)
+  const view2 = new Uint8Array(buffer2)
+  
+  for (let i = 0; i < view1.length; i++) {
+    if (view1[i] !== view2[i]) {
+      console.log('比较失败：第', i, '字节不一致', view1[i].toString(16).padStart(2, '0'), 'vs', view2[i].toString(16).padStart(2, '0'))
+      // 打印周围的字节，方便调试
+      const start = Math.max(0, i - 10)
+      const end = Math.min(view1.length, i + 10)
+      console.log('周围字节：')
+      console.log('Buffer1:', Array.from(view1.slice(start, end)).map(b => b.toString(16).padStart(2, '0')).join(' '))
+      console.log('Buffer2:', Array.from(view2.slice(start, end)).map(b => b.toString(16).padStart(2, '0')).join(' '))
+      return false
+    }
+  }
+  
+  return true
+}
+
+/**
+ * 读取Uint32数据
+ */
+function readUint32(buffer: Uint8Array, offset: number): number {
+  const view = new DataView(new ArrayBuffer(4))
+  for (let i = 0; i < 4; i++) {
+    view.setUint8(i, buffer[offset + i])
+  }
+  return view.getUint32(0, true) // little-endian
+}
+
+/**
+ * 读取Float32数据
+ */
+function readFloat32(buffer: Uint8Array, offset: number): number {
+  const view = new DataView(new ArrayBuffer(4))
+  for (let i = 0; i < 4; i++) {
+    view.setUint8(i, buffer[offset + i])
+  }
+  return view.getFloat32(0, true) // little-endian
 }
 
 /**
@@ -264,19 +460,269 @@ function parseCoordinates(coordData: string): { lon: number; lat: number; alt: n
 }
 
 /**
+ * float转int32函数
+ * 使用缩放因子将float转换为int32，保留足够的精度
+ */
+function floatToInt32(value: number): number {
+  // 对于经纬度，使用1e6的缩放因子，保留6位小数
+  // 对于海拔，使用1e2的缩放因子，保留2位小数
+  return Math.round(value * 1000000)
+}
+
+/**
+ * int32转float函数
+ */
+function int32ToFloat(value: number): number {
+  return value / 1000000
+}
+
+/**
+ * 编码差值为字节
+ * 使用可变长度编码，小数值用更少的字节
+ * 第一个字节格式: [继续位(1bit)][符号位(1bit)][数据位(6bit)]
+ * 后续字节格式: [继续位(1bit)][数据位(7bit)]
+ */
+function encodeDelta(delta: number): number[] {
+  const result: number[] = []
+  
+  // 处理符号
+  const sign = delta < 0 ? 1 : 0
+  let absDelta = Math.abs(delta)
+  
+  // 第一个字节：6位数据 + 1位符号 + 1位继续标志
+  let firstByte = absDelta & 0x3F  // 取低6位
+  absDelta >>= 6
+  
+  if (absDelta > 0) {
+    firstByte |= 0x80  // 设置继续位
+  }
+  
+  if (sign > 0) {
+    firstByte |= 0x40  // 设置符号位
+  }
+  
+  result.push(firstByte)
+  
+  // 后续字节：每字节7位数据 + 1位继续标志
+  while (absDelta > 0) {
+    let byte = absDelta & 0x7F  // 取低7位
+    absDelta >>= 7
+    
+    if (absDelta > 0) {
+      byte |= 0x80  // 设置继续位
+    }
+    
+    result.push(byte)
+  }
+  
+  return result
+}
+
+/**
+ * 解码字节为差值
+ */
+function decodeDelta(bytes: number[]): number {
+  let result = 0
+  let sign = 0
+  let shift = 0
+  
+  for (let i = 0; i < bytes.length; i++) {
+    const byte = bytes[i]
+    
+    // 提取符号位（仅第一个字节）
+    if (i === 0) {
+      sign = (byte & 0x40) >> 6
+    }
+    
+    // 提取数据位（低7位，去除符号位和继续位）
+    const dataBits = i === 0 ? (byte & 0x3F) : (byte & 0x7F)
+    
+    // 按位累加（低位优先）
+    result |= (dataBits << shift)
+    shift += (i === 0 ? 6 : 7)
+    
+    // 检查是否结束（继续位为0）
+    if ((byte & 0x80) === 0) {
+      break
+    }
+  }
+  
+  // 应用符号
+  return sign === 1 ? -result : result
+}
+
+/**
+ * 压缩点数据
+ */
+function compressPoints(points: { lon: number; lat: number; alt: number }[]): Uint8Array {
+  if (points.length === 0) {
+    return new Uint8Array(0)
+  }
+  
+  // 计算压缩后的数据大小（估算）
+  const estimatedSize = 12 + points.length * 9 // 第一个点12字节，后续每个点约3字节
+  const buffer = new Uint8Array(estimatedSize)
+  let offset = 0
+  
+  // 写入第一个点的原始数据（作为基准点）
+  const firstPoint = points[0]
+  const firstLonInt = floatToInt32(firstPoint.lon)
+  const firstLatInt = floatToInt32(firstPoint.lat)
+  const firstAltInt = floatToInt32(firstPoint.alt)
+  
+  writeInt32(buffer, offset, firstLonInt)
+  offset += 4
+  writeInt32(buffer, offset, firstLatInt)
+  offset += 4
+  writeInt32(buffer, offset, firstAltInt)
+  offset += 4
+  
+  // 压缩后续点
+  let prevLonInt = firstLonInt
+  let prevLatInt = firstLatInt
+  let prevAltInt = firstAltInt
+  
+  for (let i = 1; i < points.length; i++) {
+    const point = points[i]
+    const lonInt = floatToInt32(point.lon)
+    const latInt = floatToInt32(point.lat)
+    const altInt = floatToInt32(point.alt)
+    
+    // 计算差值
+    const deltaLon = lonInt - prevLonInt
+    const deltaLat = latInt - prevLatInt
+    const deltaAlt = altInt - prevAltInt
+    
+    // 编码差值
+    const encodedLon = encodeDelta(deltaLon)
+    const encodedLat = encodeDelta(deltaLat)
+    const encodedAlt = encodeDelta(deltaAlt)
+    
+    // 写入编码后的数据
+    for (const byte of encodedLon) {
+      buffer[offset++] = byte
+    }
+    for (const byte of encodedLat) {
+      buffer[offset++] = byte
+    }
+    for (const byte of encodedAlt) {
+      buffer[offset++] = byte
+    }
+    
+    // 更新前一个点
+    prevLonInt = lonInt
+    prevLatInt = latInt
+    prevAltInt = altInt
+  }
+  
+  // 裁剪到实际大小
+  return buffer.slice(0, offset)
+}
+
+/**
+ * 解压点数据
+ */
+function decompressPoints(compressedData: Uint8Array, pointCount: number): { lon: number; lat: number; alt: number }[] {
+  const points: { lon: number; lat: number; alt: number }[] = []
+  if (pointCount === 0 || compressedData.length === 0) {
+    return points
+  }
+  
+  let offset = 0
+  
+  // 读取第一个点（基准点）
+  const firstLonInt = readInt32(compressedData, offset)
+  offset += 4
+  const firstLatInt = readInt32(compressedData, offset)
+  offset += 4
+  const firstAltInt = readInt32(compressedData, offset)
+  offset += 4
+  
+  points.push({
+    lon: int32ToFloat(firstLonInt),
+    lat: int32ToFloat(firstLatInt),
+    alt: int32ToFloat(firstAltInt)
+  })
+  
+  // 解压后续点
+  let prevLonInt = firstLonInt
+  let prevLatInt = firstLatInt
+  let prevAltInt = firstAltInt
+  
+  for (let i = 1; i < pointCount; i++) {
+    // 解码经度差值
+    const lonBytes: number[] = []
+    while (offset < compressedData.length) {
+      const byte = compressedData[offset++]
+      lonBytes.push(byte)
+      if ((byte & 0x80) === 0) {
+        break
+      }
+    }
+    const deltaLon = decodeDelta(lonBytes)
+    
+    // 解码纬度差值
+    const latBytes: number[] = []
+    while (offset < compressedData.length) {
+      const byte = compressedData[offset++]
+      latBytes.push(byte)
+      if ((byte & 0x80) === 0) {
+        break
+      }
+    }
+    const deltaLat = decodeDelta(latBytes)
+    
+    // 解码海拔差值
+    const altBytes: number[] = []
+    while (offset < compressedData.length) {
+      const byte = compressedData[offset++]
+      altBytes.push(byte)
+      if ((byte & 0x80) === 0) {
+        break
+      }
+    }
+    const deltaAlt = decodeDelta(altBytes)
+    
+    // 计算当前点
+    const currentLonInt = prevLonInt + deltaLon
+    const currentLatInt = prevLatInt + deltaLat
+    const currentAltInt = prevAltInt + deltaAlt
+    
+    points.push({
+      lon: int32ToFloat(currentLonInt),
+      lat: int32ToFloat(currentLatInt),
+      alt: int32ToFloat(currentAltInt)
+    })
+    
+    // 更新前一个点
+    prevLonInt = currentLonInt
+    prevLatInt = currentLatInt
+    prevAltInt = currentAltInt
+  }
+  
+  return points
+}
+
+/**
  * 生成与PC端兼容的二进制数据
  * 格式：线数据（分段格式），与PC端解析器兼容
  */
-function generateBinaryData(points: { lon: number; lat: number; alt: number }[], lines: { points: { lon: number; lat: number; alt: number }[] }[]): Uint8Array {
+function generateBinaryData(points: { lon: number; lat: number; alt: number }[], lines: { points: { lon: number; lat: number; alt: number }[] }[], compress: boolean = true): Uint8Array {
   // 计算总大小
   let totalSize = 0
   
-  // 线数据大小：总段数(4字节) + 每段点数(4字节) + 每段点数据(每个点12字节)
+  // 线数据大小：总段数(4字节) + 每段点数(4字节) + 每段点数据
   totalSize += 4 // 总段数
   for (const line of lines) {
     // 简单起见，每条LineString作为一个段
     totalSize += 4 // 段点数
-    totalSize += line.points.length * 12 // 段点数据
+    if (compress) {
+      // 压缩模式：估算大小
+      totalSize += 12 + line.points.length * 9 // 第一个点12字节，后续每个点约3字节
+    } else {
+      // 非压缩模式：每个点12字节
+      totalSize += line.points.length * 12
+    }
   }
   
   // 分配缓冲区
@@ -293,28 +739,44 @@ function generateBinaryData(points: { lon: number; lat: number; alt: number }[],
     writeUint32(buffer, offset, pointCount)
     offset += 4
     
-    for (const point of line.points) {
-      writeGeoPoint(buffer, offset, point)
-      offset += 12
+    if (compress) {
+      // 压缩模式
+      const compressedData = compressPoints(line.points)
+      buffer.set(compressedData, offset)
+      offset += compressedData.length
+    } else {
+      // 非压缩模式（使用int32格式，与压缩模式保持一致）
+      for (const point of line.points) {
+        const lonInt = floatToInt32(point.lon)
+        const latInt = floatToInt32(point.lat)
+        const altInt = floatToInt32(point.alt)
+        
+        writeInt32(buffer, offset, lonInt)
+        offset += 4
+        writeInt32(buffer, offset, latInt)
+        offset += 4
+        writeInt32(buffer, offset, altInt)
+        offset += 4
+      }
     }
   }
   
-  return buffer
+  // 裁剪到实际大小
+  return buffer.slice(0, offset)
 }
 
 /**
  * 写入GeoPoint数据
  */
 function writeGeoPoint(buffer: Uint8Array, offset: number, point: { lon: number; lat: number; alt: number }): void {
-  // 使用Float32Array存储坐标
-  const floatBuffer = new ArrayBuffer(12)
-  const floatView = new Float32Array(floatBuffer)
-  floatView[0] = point.lon
-  floatView[1] = point.lat
-  floatView[2] = point.alt
+  // 使用DataView确保little-endian字节序
+  const view = new DataView(new ArrayBuffer(12))
+  view.setFloat32(0, point.lon, true) // little-endian
+  view.setFloat32(4, point.lat, true) // little-endian
+  view.setFloat32(8, point.alt, true) // little-endian
   
   // 复制到目标缓冲区
-  const uint8View = new Uint8Array(floatBuffer)
+  const uint8View = new Uint8Array(view.buffer)
   for (let i = 0; i < 12; i++) {
     buffer[offset + i] = uint8View[i]
   }
@@ -330,6 +792,29 @@ function writeUint32(buffer: Uint8Array, offset: number, value: number): void {
   for (let i = 0; i < 4; i++) {
     buffer[offset + i] = uint8View[i]
   }
+}
+
+/**
+ * 写入Int32数据
+ */
+function writeInt32(buffer: Uint8Array, offset: number, value: number): void {
+  const view = new DataView(new ArrayBuffer(4))
+  view.setInt32(0, value, true) // little-endian
+  const uint8View = new Uint8Array(view.buffer)
+  for (let i = 0; i < 4; i++) {
+    buffer[offset + i] = uint8View[i]
+  }
+}
+
+/**
+ * 读取Int32数据
+ */
+function readInt32(buffer: Uint8Array, offset: number): number {
+  const view = new DataView(new ArrayBuffer(4))
+  for (let i = 0; i < 4; i++) {
+    view.setUint8(i, buffer[offset + i])
+  }
+  return view.getInt32(0, true) // little-endian
 }
 
 /**

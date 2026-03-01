@@ -41,12 +41,22 @@ export function calculateCRC32(buffer: ArrayBuffer): number {
 }
 
 /**
+ * 读取文件内容并计算 CRC32
+ * @param filePath 文件路径
+ * @param compress 是否压缩
+ * @param fileType 文件类型，'kml' 或 'gpx'
+ */
+export async function readFileWithCRC(filePath: string, compress: boolean = false, fileType: 'kml' | 'gpx' = 'kml'): Promise<{ buffer: ArrayBuffer; crc32: number }> {
+  const buffer = await readFileAsArrayBuffer(filePath, compress, fileType)
+  const crc32 = calculateCRC32(buffer)
+  return { buffer, crc32 }
+}
+
+/**
  * 读取 KML 文件内容并计算 CRC32
  */
 export async function readKmlFileWithCRC(filePath: string, compress: boolean = false): Promise<{ buffer: ArrayBuffer; crc32: number }> {
-  const buffer = await readKmlFileAsArrayBuffer(filePath, compress)
-  const crc32 = calculateCRC32(buffer)
-  return { buffer, crc32 }
+  return readFileWithCRC(filePath, compress, 'kml')
 }
 
 export interface SendProgress {
@@ -180,16 +190,25 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * 将KML文件转换为与PC端兼容的bin文件（不压缩）
+ * 将文件转换为与PC端兼容的bin文件（不压缩）
+ * @param text 文件内容
+ * @param fileType 文件类型，'kml' 或 'gpx'
  */
-export function convertKmlToBin(text: string): ArrayBuffer {
-  // 解析KML文件，提取点和线数据
-  const { points, lines } = parseKmlContent(text)
+export function convertFileToBin(text: string, fileType: 'kml' | 'gpx'): ArrayBuffer {
+  // 根据文件类型选择解析器
+  const { points, lines } = fileType === 'kml' ? parseKmlContent(text) : parseGpxContent(text)
   
   // 生成二进制数据（不压缩）
   const binaryData = generateBinaryData(points, lines, false)
   
   return binaryData.buffer
+}
+
+/**
+ * 将KML文件转换为与PC端兼容的bin文件（不压缩）
+ */
+export function convertKmlToBin(text: string): ArrayBuffer {
+  return convertFileToBin(text, 'kml')
 }
 
 /**
@@ -261,14 +280,24 @@ export function compressBinFile(binBuffer: ArrayBuffer): ArrayBuffer {
 }
 
 /**
+ * PC端兼容的文件转换算法（组合转换和压缩）
+ * 生成与PC端解析器兼容的二进制格式
+ * @param text 文件内容
+ * @param fileType 文件类型，'kml' 或 'gpx'
+ */
+export function compressTextByType(text: string, fileType: 'kml' | 'gpx'): ArrayBuffer {
+  // 先转换为bin文件
+  const binBuffer = convertFileToBin(text, fileType)
+  // 再压缩
+  return compressBinFile(binBuffer)
+}
+
+/**
  * PC端兼容的KML文件转换算法（组合转换和压缩）
  * 生成与PC端解析器兼容的二进制格式
  */
 export function compressText(text: string): ArrayBuffer {
-  // 先转换为bin文件
-  const binBuffer = convertKmlToBin(text)
-  // 再压缩
-  return compressBinFile(binBuffer)
+  return compressTextByType(text, 'kml')
 }
 
 /**
@@ -415,6 +444,52 @@ function parseKmlContent(text: string): { points: { lon: number; lat: number; al
   while ((match = lineRegex.exec(text)) !== null) {
     const coordData = match[1].trim()
     const linePoints = parseCoordinates(coordData)
+    if (linePoints.length > 0) {
+      lines.push({ points: linePoints })
+    }
+  }
+  
+  return { points, lines }
+}
+
+/**
+ * 解析GPX内容，提取点和线数据
+ */
+function parseGpxContent(text: string): { points: { lon: number; lat: number; alt: number }[]; lines: { points: { lon: number; lat: number; alt: number }[] }[] } {
+  const points: { lon: number; lat: number; alt: number }[] = []
+  const lines: { points: { lon: number; lat: number; alt: number }[] }[] = []
+  
+  // 提取wpt数据（对应KML的Point）
+  const wptRegex = /<wpt[\s\S]*?lat="([^"]+)"[\s\S]*?lon="([^"]+)"[\s\S]*?(?:<ele>([\s\S]*?)<\/ele>)?[\s\S]*?<\/wpt>/g
+  let match
+  while ((match = wptRegex.exec(text)) !== null) {
+    const lat = parseFloat(match[1])
+    const lon = parseFloat(match[2])
+    const alt = match[3] ? parseFloat(match[3]) : 0
+    
+    if (!isNaN(lon) && !isNaN(lat)) {
+      points.push({ lon, lat, alt: isNaN(alt) ? 0 : alt })
+    }
+  }
+  
+  // 提取trkseg和trkpt数据（对应KML的LineString）
+  const trksegRegex = /<trkseg[\s\S]*?<\/trkseg>/g
+  while ((match = trksegRegex.exec(text)) !== null) {
+    const trksegContent = match[0]
+    const trkptRegex = /<trkpt[\s\S]*?lat="([^"]+)"[\s\S]*?lon="([^"]+)"[\s\S]*?(?:<ele>([\s\S]*?)<\/ele>)?[\s\S]*?(?:\/>|<\/trkpt>)/g
+    const linePoints: { lon: number; lat: number; alt: number }[] = []
+    
+    let trkptMatch
+    while ((trkptMatch = trkptRegex.exec(trksegContent)) !== null) {
+      const lat = parseFloat(trkptMatch[1])
+      const lon = parseFloat(trkptMatch[2])
+      const alt = trkptMatch[3] ? parseFloat(trkptMatch[3]) : 0
+      
+      if (!isNaN(lon) && !isNaN(lat)) {
+        linePoints.push({ lon, lat, alt: isNaN(alt) ? 0 : alt })
+      }
+    }
+    
     if (linePoints.length > 0) {
       lines.push({ points: linePoints })
     }
@@ -818,10 +893,13 @@ function readInt32(buffer: Uint8Array, offset: number): number {
 }
 
 /**
- * 读取 KML 文件内容为 ArrayBuffer（UTF-8）
+ * 读取文件内容为 ArrayBuffer（UTF-8）
  * 使用 encoding: 'utf8' 保证各平台返回一致，再转成 UTF-8 字节
+ * @param filePath 文件路径
+ * @param compress 是否压缩
+ * @param fileType 文件类型，'kml' 或 'gpx'
  */
-export function readKmlFileAsArrayBuffer(filePath: string, compress: boolean = false): Promise<ArrayBuffer> {
+export function readFileAsArrayBuffer(filePath: string, compress: boolean = false, fileType: 'kml' | 'gpx' = 'kml'): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const fs = wx.getFileSystemManager()
     fs.readFile({
@@ -833,7 +911,7 @@ export function readKmlFileAsArrayBuffer(filePath: string, compress: boolean = f
           if (compress) {
             // 使用压缩算法
             console.log('Compressing file, original length:', data.length)
-            const compressedBuffer = compressText(data)
+            const compressedBuffer = compressTextByType(data, fileType)
             console.log('Compressed length:', compressedBuffer.byteLength)
             console.log('Compression ratio:', ((1 - compressedBuffer.byteLength / data.length) * 100).toFixed(2) + '%')
             
@@ -854,6 +932,14 @@ export function readKmlFileAsArrayBuffer(filePath: string, compress: boolean = f
       fail: (err) => reject(err)
     })
   })
+}
+
+/**
+ * 读取 KML 文件内容为 ArrayBuffer（UTF-8）
+ * 使用 encoding: 'utf8' 保证各平台返回一致，再转成 UTF-8 字节
+ */
+export function readKmlFileAsArrayBuffer(filePath: string, compress: boolean = false): Promise<ArrayBuffer> {
+  return readFileAsArrayBuffer(filePath, compress, 'kml')
 }
 
 /**

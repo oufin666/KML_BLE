@@ -70,4 +70,14 @@ int stream_decompress_file(const char* compressed_file, const char* decompressed
  */
 int32_t decode_delta(const uint8_t* bytes, int* bytes_consumed);
 
+/**
+ * @brief BLE KML任务主函数
+ * @param compressed_file 压缩文件路径
+ * @param sd_file_opened 文件打开标志指针
+ * @param kml_transfer_active 传输激活标志指针
+ * @param transfer_complete 传输完成标志指针
+ * @note 功能：封装StartBLEKMLTask中的主要逻辑，包括系统初始化、文件打开、数据处理和传输完成处理
+ */
+void kml_ble_task_main(const char* compressed_file, volatile uint8_t* sd_file_opened, volatile uint8_t* kml_transfer_active, volatile uint8_t* transfer_complete);
+
 #endif /* KML_UTILS_H */

@@ -17,7 +17,9 @@ import {
 } from '../../utils/ble'
 import {
   readKmlFileAsArrayBuffer,
+  readFileAsArrayBuffer,
   readKmlFileWithCRC,
+  readFileWithCRC,
   sendKmlBufferToBle,
   verifyChunkedPayload,
   calculateCRC32,
@@ -25,6 +27,7 @@ import {
   compressText,
   decompress,
   convertKmlToBin,
+  convertFileToBin,
   compressBinFile,
   compareBuffers
 } from '../../utils/kml-sender'
@@ -40,7 +43,7 @@ Component({
     statusText: '',
     devices: [] as BLEDeviceInfo[],
     selectedDevice: null as BLEDeviceInfo | null,
-    kmlFile: null as { path: string; name: string; size: number } | null,
+    kmlFile: null as { path: string; name: string; size: number; type: 'kml' | 'gpx' } | null,
 
     progress: 0,
     progressText: '',
@@ -67,7 +70,7 @@ Component({
   },
 
   methods: {
-    /** 选择 KML 文件 */
+    /** 选择 KML 或 GPX 文件 */
     async onChooseKml() {
       try {
         const res = await new Promise<WechatMiniprogram.ChooseMessageFileSuccessCallbackResult>(
@@ -75,15 +78,21 @@ Component({
             wx.chooseMessageFile({
               count: 1,
               type: 'file',
-              extension: ['kml', 'txt'],
+              extension: ['kml', 'gpx', 'txt'],
               success: resolve,
               fail: reject
             })
           }
         )
         const file = res.tempFiles[0]
+        // 确定文件类型
+        const fileName = file.name.toLowerCase()
+        let fileType: 'kml' | 'gpx' = 'kml'
+        if (fileName.endsWith('.gpx')) {
+          fileType = 'gpx'
+        }
         this.setData({
-          kmlFile: { path: file.path, name: file.name, size: file.size },
+          kmlFile: { path: file.path, name: file.name, size: file.size, type: fileType },
           errorMsg: ''
         })
         this.setData({ verifyResult: null })
@@ -105,7 +114,7 @@ Component({
     console.log('===== onCalculateCRC called =====')
     const { kmlFile } = this.data
     if (!kmlFile) {
-      wx.showToast({ title: '请先选择 KML 文件', icon: 'none' })
+      wx.showToast({ title: '请先选择文件', icon: 'none' })
       return
     }
 
@@ -114,13 +123,13 @@ Component({
       console.log('Reading file for CRC calculation...')
       
       // 计算压缩前的CRC32
-      const originalBuffer = await readKmlFileAsArrayBuffer(kmlFile.path, false)
+      const originalBuffer = await readFileAsArrayBuffer(kmlFile.path, false, kmlFile.type)
       const originalCRC32 = calculateCRC32(originalBuffer)
       const originalCRC32Hex = originalCRC32.toString(16).toUpperCase().padStart(8, '0')
       console.log('Original CRC32:', originalCRC32Hex)
       
       // 计算压缩后的CRC32
-      const compressedBuffer = await readKmlFileAsArrayBuffer(kmlFile.path, true)
+      const compressedBuffer = await readFileAsArrayBuffer(kmlFile.path, true, kmlFile.type)
       const compressedCRC32 = calculateCRC32(compressedBuffer)
       const compressedCRC32Hex = compressedCRC32.toString(16).toUpperCase().padStart(8, '0')
       console.log('Compressed CRC32:', compressedCRC32Hex)
@@ -149,13 +158,14 @@ Component({
     try {
       const { kmlFile } = this.data
       
-      // 检查是否有选择的KML文件
+      // 检查是否有选择的文件
       if (!kmlFile) {
-        wx.showToast({ title: '请先选择KML文件', icon: 'none' })
+        wx.showToast({ title: '请先选择文件', icon: 'none' })
         return
       }
       
       console.log('\n测试文件:', kmlFile.name)
+      console.log('文件类型:', kmlFile.type)
       
       // 读取文件内容
       const fs = wx.getFileSystemManager()
@@ -171,9 +181,9 @@ Component({
       console.log('原始文件长度:', fileContent.length)
       console.log('原始文件前50字符:', fileContent.substring(0, 50))
       
-      // 步骤1：将KML转换为bin文件（不压缩）
-      console.log('\n步骤1：将KML转换为bin文件（不压缩）')
-      const binBuffer = convertKmlToBin(fileContent)
+      // 步骤1：将文件转换为bin文件（不压缩）
+      console.log(`\n步骤1：将${kmlFile.type.toUpperCase()}转换为bin文件（不压缩）`)
+      const binBuffer = convertFileToBin(fileContent, kmlFile.type)
       console.log('转换后bin文件大小:', binBuffer.byteLength, '字节')
       
       // 验证转换后的数据格式
@@ -421,17 +431,17 @@ Component({
     async onVerifyPayload() {
       const { kmlFile } = this.data
       if (!kmlFile) {
-        wx.showToast({ title: '请先选择 KML 文件', icon: 'none' })
+        wx.showToast({ title: '请先选择文件', icon: 'none' })
         return
       }
       try {
-        const buffer = await readKmlFileAsArrayBuffer(kmlFile.path)
+        const buffer = await readFileAsArrayBuffer(kmlFile.path, true, kmlFile.type)
         const result = verifyChunkedPayload(buffer)
 
         const lines = [
           result.ok ? '✅ 校验通过' : '❌ 校验失败',
           '',
-          `总字节: ${result.totalBytes}（KML ${buffer.byteLength} + 结束符 1）`,
+          `总字节: ${result.totalBytes}（${kmlFile.type.toUpperCase()} ${buffer.byteLength} + 结束符 1）`,
           `分包数: ${result.chunkCount}`,
           `末尾为 0xFF 0xFF 0xFF: ${result.endsWithEndMarker ? '是' : '否'}`,
           `末尾为 0x04: ${result.lastByteIs0x04 ? '是' : '否'}`, // 保持兼容
@@ -497,7 +507,7 @@ Component({
 
         // 计算压缩前后的字节数并计算CRC32
         console.log('Reading file with CRC32 calculation...')
-        const { buffer, crc32 } = await readKmlFileWithCRC(kmlFile.path, compress)
+        const { buffer, crc32 } = await readFileWithCRC(kmlFile.path, compress, kmlFile.type)
         const compressedSize = buffer.byteLength
         const crc32Hex = crc32.toString(16).toUpperCase().padStart(8, '0')
         
@@ -613,9 +623,9 @@ Component({
         })
         console.log('Status set to sending (simulated)')
 
-        // 读取KML文件内容并计算CRC32
+        // 读取文件内容并计算CRC32
         console.log('Reading file with CRC32 calculation for simulation...')
-        const { buffer, crc32 } = await readKmlFileWithCRC(kmlFile.path, compress)
+        const { buffer, crc32 } = await readFileWithCRC(kmlFile.path, compress, kmlFile.type)
         const compressedSize = buffer.byteLength
         const crc32Hex = crc32.toString(16).toUpperCase().padStart(8, '0')
         

@@ -15,4 +15,5 @@
 ../Drivers/BSP/src/kml_utils.c:530:9:kml_handle_transfer_complete	552	static
 ../Drivers/BSP/src/kml_utils.c:605:9:kml_init_system	16	static
 ../Drivers/BSP/src/kml_utils.c:638:9:kml_write_bin_to_sd	24	static
-../Drivers/BSP/src/kml_utils.c:658:9:kml_process_completed_transfer	240	static
+../Drivers/BSP/src/kml_utils.c:653:9:kml_process_completed_transfer	240	static
+../Drivers/BSP/src/kml_utils.c:696:6:kml_ble_task_main	160	static

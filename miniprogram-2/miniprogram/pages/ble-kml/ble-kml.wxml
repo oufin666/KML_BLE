@@ -2,10 +2,10 @@
 <navigation-bar title="BLE KML 发送" back="{{true}}" color="black" background="#FFF"></navigation-bar>
 <scroll-view class="scrollarea" scroll-y style="height: calc(100vh - 100rpx);">
   <view class="container">
-    <!-- 1. 选择 KML 文件 -->
+    <!-- 1. 选择文件 -->
     <view class="section">
-      <view class="section-title">1. 选择 KML 文件</view>
-      <button class="btn btn-primary" bindtap="onChooseKml">选择 KML 文件</button>
+      <view class="section-title">1. 选择文件</view>
+      <button class="btn btn-primary" bindtap="onChooseKml">选择 KML 或 GPX 文件</button>
       <view wx:if="{{kmlFile}}" class="file-info">
         已选: {{kmlFile.name}} ({{kmlFile.size}} 字节)
       </view>
@@ -45,7 +45,7 @@
 
     <!-- 3. 发送 -->
     <view class="section">
-      <view class="section-title">3. 发送 KML（分包 + 结束符 0xFF 0xFF 0xFF）</view>
+      <view class="section-title">3. 发送文件（分包 + 结束符 0xFF 0xFF 0xFF）</view>
       <view class="compress-option">
         <checkbox value="compress" checked="{{compress}}" bindchange="onCompressChange" /> 启用转换（减少传输时间）
       </view>
@@ -71,7 +71,7 @@
         disabled="{{!kmlFile || !selectedDevice || status === 'sending'}}"
         bindtap="onSendKml"
       >
-        {{status === 'sending' ? '发送中...' : '发送 KML'}}
+        {{status === 'sending' ? '发送中...' : '发送文件'}}
       </button>
       <button
         class="btn btn-secondary"
@@ -88,7 +88,7 @@
           <text class="time-left-text">{{timeLeftText}}</text>
         </view>
       </view>
-      <view wx:if="{{status === 'done'}}" class="done-tip">整段 KML 已发送，末尾已追加 0xFF 0xFF 0xFF</view>
+      <view wx:if="{{status === 'done'}}" class="done-tip">整段文件已发送，末尾已追加 0xFF 0xFF 0xFF</view>
     </view>
 
     <!-- 错误信息 -->

@@ -684,3 +684,70 @@ FRESULT kml_process_completed_transfer(const char *compressed_file, uint32_t tot
     
     return res;
 }
+
+/**
+ * @brief BLE KML任务主函数
+ * @param compressed_file 压缩文件路径
+ * @param sd_file_opened 文件打开标志指针
+ * @param kml_transfer_active 传输激活标志指针
+ * @param transfer_complete 传输完成标志指针
+ * @note 功能：封装StartBLEKMLTask中的主要逻辑，包括系统初始化、文件打开、数据处理和传输完成处理
+ */
+void kml_ble_task_main(const char* compressed_file, volatile uint8_t* sd_file_opened, volatile uint8_t* kml_transfer_active, volatile uint8_t* transfer_complete) {
+    FRESULT res;
+    
+    // 延时等待系统初始化完成（SD卡已在main中初始化）
+    uint8_t wait_msg[] = "Waiting for SD init...\r\n";
+    HAL_UART_Transmit(&huart1, wait_msg, strlen((char*)wait_msg), 100);
+    vTaskDelay(pdMS_TO_TICKS(500));  // 缩短延迟时间
+
+    // 发送启动消息
+    uint8_t start_msg[] = "\r\n=== BLE KML Task Started ===\r\n";
+    HAL_UART_Transmit(&huart1, start_msg, strlen((char*)start_msg), 100);
+    
+    // 初始化系统
+    res = kml_init_system();
+    if (res != FR_OK) {
+        uint8_t msg[] = "SD mount FAILED! Cannot continue.\r\n";
+        HAL_UART_Transmit(&huart1, msg, strlen((char*)msg), 100);
+        // 进入死循环
+        for(;;) { vTaskDelay(pdMS_TO_TICKS(1000)); }
+    }
+    
+    uint8_t msg1[] = "SD mounted OK\r\n";
+    HAL_UART_Transmit(&huart1, msg1, strlen((char*)msg1), 100);
+
+    // 主循环
+    for (;;) {
+        // 检查是否需要打开文件
+        if (!*sd_file_opened && !*kml_transfer_active) {
+            // 打开压缩文件并准备接收数据
+            res = kml_open_compressed_file(compressed_file, sd_file_opened, kml_transfer_active);
+            if (res != FR_OK) {
+                vTaskDelay(pdMS_TO_TICKS(1000)); // 延迟后重试
+            }
+        }
+        
+        // 处理数据缓冲区
+        static uint32_t total_written = 0;
+        static uint32_t last_print_index = 0;
+        if (*kml_transfer_active) {
+            kml_process_buffers(*sd_file_opened, &total_written, &last_print_index);
+        }
+        
+        // 检查传输是否完成
+        if(*transfer_complete && *sd_file_opened){
+            // 保存总写入字节数
+            uint32_t actual_written = total_written;
+            
+            // 处理传输完成
+            kml_handle_transfer_complete(compressed_file, actual_written, sd_file_opened, kml_transfer_active);
+            
+            // 重置总写入计数
+            total_written = 0;
+            last_print_index = 0;
+        }
+        
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}

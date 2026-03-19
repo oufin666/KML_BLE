@@ -1,0 +1,4 @@
+../Drivers/BSP/src/motor.c:4:6:MOTOR_Init	8	static
+../Drivers/BSP/src/motor.c:10:6:MOTOR_SetSpeed	24	static
+../Drivers/BSP/src/motor.c:30:6:MOTOR_On	8	static
+../Drivers/BSP/src/motor.c:35:6:MOTOR_Off	8	static

@@ -99,15 +99,11 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_RTC_Init();
+  MX_FATFS_Init();
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
-  
-  // 发送初始化开始消息
-  uint8_t init_start_msg[] = "\r\n=== System Initialization Start ===\r\n";
-  HAL_UART_Transmit(&huart1, init_start_msg, strlen((char*)init_start_msg), 100);
-  
   /* USER CODE BEGIN 2 */
   // 发送SD卡初始化消息
   uint8_t sd_init_msg[] = "Initializing SD card...\r\n";
@@ -129,7 +125,7 @@ int main(void)
   
   // 发送FatFS初始化完成消息
   uint8_t fatfs_init_done_msg[] = "FatFS initialized\r\n";
-  HAL_UART_Transmit(&huart1, fatfs_init_done_msg, strlen((char*)fatfs_init_done_msg), 100);
+  HAL_UART_Transmit(&huart1, fatfs_init_done_msg, strlen((char*)fatfs_init_done_msg), 100);  
   
   // gps_mutex = xSemaphoreCreateMutex(); // 注释：暂时不需要GPS功能
   // Bluetooth_Init(); // 注释：暂时不需要蓝牙心率功能，只保留BLE KML传输
@@ -142,32 +138,13 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  uint8_t kernel_init_msg[] = "Initializing FreeRTOS kernel...\r\n";
-  HAL_UART_Transmit(&huart1, kernel_init_msg, strlen((char*)kernel_init_msg), 100);
-  
   osKernelInitialize();
-  
-  uint8_t kernel_init_done_msg[] = "FreeRTOS kernel initialized\r\n";
-  HAL_UART_Transmit(&huart1, kernel_init_done_msg, strlen((char*)kernel_init_done_msg), 100);
 
   /* Call init function for freertos objects (in cmsis_os2.c) */
-  uint8_t freertos_init_msg[] = "Initializing FreeRTOS tasks...\r\n";
-  HAL_UART_Transmit(&huart1, freertos_init_msg, strlen((char*)freertos_init_msg), 100);
-  
   MX_FREERTOS_Init();
-  
-  uint8_t freertos_init_done_msg[] = "FreeRTOS tasks initialized\r\n";
-  HAL_UART_Transmit(&huart1, freertos_init_done_msg, strlen((char*)freertos_init_done_msg), 100);
 
   /* Start scheduler */
-  uint8_t scheduler_start_msg[] = "Starting FreeRTOS scheduler...\r\n";
-  HAL_UART_Transmit(&huart1, scheduler_start_msg, strlen((char*)scheduler_start_msg), 100);
-  
   osKernelStart();
-  
-  // 这行代码不应该被执行到
-  uint8_t error_msg[] = "ERROR: Scheduler start failed!\r\n";
-  HAL_UART_Transmit(&huart1, error_msg, strlen((char*)error_msg), 100);
 
   /* We should never get here as control is now taken by the scheduler */
 

@@ -74,6 +74,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define MOTOR_Pin GPIO_PIN_13
+#define MOTOR_GPIO_Port GPIOC
 #define LCD_DC_Pin GPIO_PIN_4
 #define LCD_DC_GPIO_Port GPIOA
 #define LCD_SCL_Pin GPIO_PIN_5
@@ -84,27 +86,20 @@ void Error_Handler(void);
 #define LCD_CS_GPIO_Port GPIOB
 #define LCD_BLK_Pin GPIO_PIN_1
 #define LCD_BLK_GPIO_Port GPIOB
+#define BLE_RST_Pin GPIO_PIN_2
+#define BLE_RST_GPIO_Port GPIOB
 #define LED_Pin GPIO_PIN_12
 #define LED_GPIO_Port GPIOB
-#define HR_INT_Pin GPIO_PIN_13
-#define HR_INT_GPIO_Port GPIOB
-#define HR_INT_EXTI_IRQn EXTI15_10_IRQn
-#define LCD_RES_Pin GPIO_PIN_14
-#define LCD_RES_GPIO_Port GPIOB
-#define HR_RESET_Pin GPIO_PIN_12
-#define HR_RESET_GPIO_Port GPIOA
-#define EC_KEY_Pin GPIO_PIN_3
-#define EC_KEY_GPIO_Port GPIOB
-#define EC_KEY_EXTI_IRQn EXTI3_IRQn
-#define EC_A_Pin GPIO_PIN_6
-#define EC_A_GPIO_Port GPIOB
-#define EC_A_EXTI_IRQn EXTI9_5_IRQn
-#define EC_B_Pin GPIO_PIN_7
-#define EC_B_GPIO_Port GPIOB
-#define HR_SDA_Pin GPIO_PIN_8
-#define HR_SDA_GPIO_Port GPIOB
-#define HR_SCL_Pin GPIO_PIN_9
-#define HR_SCL_GPIO_Port GPIOB
+#define BLE_KEY_Pin GPIO_PIN_11
+#define BLE_KEY_GPIO_Port GPIOA
+#define BLE_LINK_Pin GPIO_PIN_12
+#define BLE_LINK_GPIO_Port GPIOA
+#define MPU_INT_Pin GPIO_PIN_6
+#define MPU_INT_GPIO_Port GPIOB
+#define MPU_SDA_Pin GPIO_PIN_8
+#define MPU_SDA_GPIO_Port GPIOB
+#define MPU_SCL_Pin GPIO_PIN_9
+#define MPU_SCL_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define  GPS_USART  USART2

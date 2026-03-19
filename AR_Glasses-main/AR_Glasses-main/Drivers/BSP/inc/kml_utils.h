@@ -7,6 +7,7 @@
 // 功能开关宏定义
 #define KML_ENABLE_CRC          0   // 1: 开启CRC校验, 0: 关闭CRC校验（新算法不需要）
 #define KML_ENABLE_DECOMPRESS   1   // 1: 开启解压缩, 0: 关闭解压缩（使用新的差分解压算法）
+#define KML_ENABLE_JSON_MODE    0   // 1: 开启JSON字符串接收模式（直接保存为.json文件）, 0: 关闭（接收bin文件）
 
 // 函数声明
 /**
@@ -79,5 +80,26 @@ int32_t decode_delta(const uint8_t* bytes, int* bytes_consumed);
  * @note 功能：封装StartBLEKMLTask中的主要逻辑，包括系统初始化、文件打开、数据处理和传输完成处理
  */
 void kml_ble_task_main(const char* compressed_file, volatile uint8_t* sd_file_opened, volatile uint8_t* kml_transfer_active, volatile uint8_t* transfer_complete);
+
+/**
+ * @brief 打开JSON文件并准备接收数据（JSON模式）
+ * @param json_file JSON文件路径
+ * @param sd_file_opened 文件打开状态
+ * @param kml_transfer_active 传输激活状态
+ * @return FRESULT 文件系统操作结果
+ * @note 功能：重置缓冲区状态、打开文件、启动DMA接收
+ */
+FRESULT kml_open_json_file(const char* json_file, volatile uint8_t* sd_file_opened, volatile uint8_t* kml_transfer_active);
+
+/**
+ * @brief 处理JSON传输完成（JSON模式）
+ * @param json_file JSON文件路径
+ * @param actual_written 实际写入字节数
+ * @param sd_file_opened 文件打开标志指针
+ * @param kml_transfer_active 传输激活标志指针
+ * @return FRESULT 文件系统操作结果
+ * @note 功能：关闭JSON文件，不做解压处理
+ */
+FRESULT kml_handle_json_transfer_complete(const char* json_file, uint32_t actual_written, volatile uint8_t* sd_file_opened, volatile uint8_t* kml_transfer_active);
 
 #endif /* KML_UTILS_H */

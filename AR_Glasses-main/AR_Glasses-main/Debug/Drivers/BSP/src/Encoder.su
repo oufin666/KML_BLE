@@ -1,7 +1,7 @@
-../Drivers/BSP/src/Encoder.c:18:6:Encoder_Init	8	static
-../Drivers/BSP/src/Encoder.c:23:9:Get_EncoderDiff	4	static
-../Drivers/BSP/src/Encoder.c:28:6:Get_is_pressed	4	static
-../Drivers/BSP/src/Encoder.c:38:6:Encoder_RegisterPressCallback	16	static
-../Drivers/BSP/src/Encoder.c:43:6:Encoder_PressCallback	16	static
-../Drivers/BSP/src/Encoder.c:48:6:Encoder_Rotate_IRQHandler	16	static
-../Drivers/BSP/src/Encoder.c:59:6:Encoder_Press_IRQHandler	24	static
+../Drivers/BSP/src/Encoder.c:7:6:Encoder_Init	4	static
+../Drivers/BSP/src/Encoder.c:11:9:Get_EncoderDiff	4	static
+../Drivers/BSP/src/Encoder.c:15:6:Get_is_pressed	4	static
+../Drivers/BSP/src/Encoder.c:19:6:Encoder_RegisterPressCallback	16	static
+../Drivers/BSP/src/Encoder.c:23:6:Encoder_PressCallback	16	static
+../Drivers/BSP/src/Encoder.c:27:6:Encoder_Rotate_IRQHandler	4	static
+../Drivers/BSP/src/Encoder.c:31:6:Encoder_Press_IRQHandler	4	static

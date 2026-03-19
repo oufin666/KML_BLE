@@ -18,7 +18,7 @@ void delay_ms(uint16_t xms) {
 void LCD_GPIO_Init(void) {
 //	LCD_SCLK_Set();
 //	LCD_MOSI_Set();
-	LCD_RES_Set();
+	// LCD_RES pin not used
 	LCD_DC_Set();
 	LCD_CS_Set();
 	LCD_BLK_Set();
@@ -168,9 +168,8 @@ void LCD_Address_Set(u16 x1, u16 y1, u16 x2, u16 y2) {
 void LCD_Init(void) {
 	LCD_GPIO_Init(); //初始化GPIO
 
-	LCD_RES_Clr(); //复位
+	// LCD_RES pin not used
 	delay_ms(100);
-	LCD_RES_Set();
 	delay_ms(100);
 
 	LCD_BLK_Set(); //打开背光

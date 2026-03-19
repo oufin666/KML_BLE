@@ -43,9 +43,8 @@ void LCD_TK024F3036_Initialize(void)
 {
 	LCD_TK024F3036_GPIO_Init();
 
-		LCD_RES_Clr(); //复位
+		// LCD_RES pin not used
 		delay_ms(100);
-		LCD_RES_Set();
 		delay_ms(100);
 
 //		LCD_BLK_Set(); //打开背光

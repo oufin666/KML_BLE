@@ -686,12 +686,132 @@ FRESULT kml_process_completed_transfer(const char *compressed_file, uint32_t tot
 }
 
 /**
+ * @brief 打开JSON文件并准备接收数据（JSON模式）
+ * @param json_file JSON文件路径
+ * @param sd_file_opened 文件打开状态
+ * @param kml_transfer_active 传输激活状态
+ * @return FRESULT 文件系统操作结果
+ */
+FRESULT kml_open_json_file(const char* json_file, volatile uint8_t* sd_file_opened, volatile uint8_t* kml_transfer_active) {
+    FRESULT res;
+    
+    // 重置缓冲区，确保开始接收新文件时缓冲区为空
+    for (int i = 0; i < 2; i++) {
+        app_buffer_full[i] = 0;
+        app_buffer_index[i] = 0;
+    }
+    transfer_complete = 0;
+    
+    // 打开JSON文件准备接收数据
+    uint8_t open_msg[150];
+    sprintf((char*)open_msg, "Opening %s for JSON data reception...\r\n", json_file);
+    HAL_UART_Transmit(&huart1, open_msg, strlen((char*)open_msg), 100);
+    
+    res = f_open(&SDFile, json_file, FA_CREATE_ALWAYS | FA_WRITE);
+    uint8_t open_result_msg[100];
+    sprintf((char*)open_result_msg, "f_open result: %d\r\n", res);
+    HAL_UART_Transmit(&huart1, open_result_msg, strlen((char*)open_result_msg), 100);
+    
+    if (res == FR_OK) {
+        *sd_file_opened = 1;
+        *kml_transfer_active = 1;
+        
+        uint8_t msg[150];
+        sprintf((char*)msg, "\r\n=== Ready to receive JSON file ===\r\nFile: %s\r\nsd_file_opened=%d, kml_transfer_active=%d\r\n", 
+                json_file, *sd_file_opened, *kml_transfer_active);
+        HAL_UART_Transmit(&huart1, msg, strlen((char*)msg), 100);
+        uint8_t msg2[] = "Waiting for JSON data...\r\nEnd with 0xFF 0xFF 0xFF to complete transfer\r\n\r\n";
+        HAL_UART_Transmit(&huart1, msg2, strlen((char*)msg2), 100);
+        
+        // 启动DMA接收
+        UART1_Start_DMA_Reception();
+    } else {
+        uint8_t msg[] = "Cannot create file for JSON data reception\r\n";
+        HAL_UART_Transmit(&huart1, msg, strlen((char*)msg), 100);
+    }
+    
+    return res;
+}
+
+/**
+ * @brief 处理JSON传输完成（JSON模式）
+ * @param json_file JSON文件路径
+ * @param actual_written 实际写入字节数
+ * @param sd_file_opened 文件打开标志指针
+ * @param kml_transfer_active 传输激活标志指针
+ * @return FRESULT 文件系统操作结果
+ */
+FRESULT kml_handle_json_transfer_complete(const char* json_file, uint32_t actual_written, volatile uint8_t* sd_file_opened, volatile uint8_t* kml_transfer_active) {
+    FRESULT res;
+    
+    // 确保所有满的缓冲区都写入了
+    for (int i = 0; i < 2; i++) {
+        if (app_buffer_full[i]) {
+            uint32_t bytes_to_write = app_buffer_index[i];
+            if (bytes_to_write > 0) {
+                UINT bytes_written;
+                res = f_write(&SDFile, (uint8_t*)app_buffers[i], bytes_to_write, &bytes_written);
+                if(res == FR_OK) {
+                    // 重置缓冲区状态
+                    app_buffer_full[i] = 0;
+                    app_buffer_index[i] = 0;
+                } else {
+                    // 最终写入失败
+                    uint8_t final_err_msg[100];
+                    sprintf((char*)final_err_msg, "Final JSON Write error: %d\r\n", res);
+                    HAL_UART_Transmit(&huart1, final_err_msg, strlen((char*)final_err_msg), 100);
+                    break;
+                }
+            }
+        }
+    }
+    
+    // 打印最终写入状态
+    uint8_t final_write_msg[100];
+    sprintf((char*)final_write_msg, "Final JSON Write: Transfer complete, Total %ld bytes written\r\n", actual_written);
+    HAL_UART_Transmit(&huart1, final_write_msg, strlen((char*)final_write_msg), 100);
+    
+    // 同步并关闭JSON文件
+    f_sync(&SDFile);
+    f_close(&SDFile);
+    *sd_file_opened = 0;
+    
+    // 打印JSON文件传输完成信息
+    uint8_t msg[120];
+    sprintf((char*)msg, "=== JSON File Transfer Complete ===\r\nFile: %s\r\nTotal Written: %ld bytes\r\n", 
+            json_file, actual_written);
+    HAL_UART_Transmit(&huart1, msg, strlen((char*)msg), 100);
+    
+    // 重置缓冲区状态
+    for (int i = 0; i < 2; i++) {
+        app_buffer_full[i] = 0;
+        app_buffer_index[i] = 0;
+    }
+    transfer_complete = 0;
+    
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    
+    *sd_file_opened = 0;
+    uint8_t ready_msg[150];
+    sprintf((char*)ready_msg, "Ready for next transfer\r\nPrevious JSON file saved as: %s\r\n", json_file);
+    HAL_UART_Transmit(&huart1, ready_msg, strlen((char*)ready_msg), 100);
+    *kml_transfer_active = 1;
+    
+    uint8_t msg2[] = "\r\nReady for next transfer\r\n";
+    HAL_UART_Transmit(&huart1, msg2, strlen((char*)msg2), 100);
+    
+    return FR_OK;
+}
+
+/**
  * @brief BLE KML任务主函数
- * @param compressed_file 压缩文件路径
+ * @param compressed_file 压缩文件路径（或JSON文件路径，取决于模式）
  * @param sd_file_opened 文件打开标志指针
  * @param kml_transfer_active 传输激活标志指针
  * @param transfer_complete 传输完成标志指针
- * @note 功能：封装StartBLEKMLTask中的主要逻辑，包括系统初始化、文件打开、数据处理和传输完成处理
+ * @note 功能：根据KML_ENABLE_JSON_MODE宏定义选择接收模式
+ *       - JSON模式：直接保存JSON字符串为.json文件
+ *       - BIN模式：接收压缩bin文件并进行解压处理
  */
 void kml_ble_task_main(const char* compressed_file, volatile uint8_t* sd_file_opened, volatile uint8_t* kml_transfer_active, volatile uint8_t* transfer_complete) {
     FRESULT res;
@@ -702,7 +822,11 @@ void kml_ble_task_main(const char* compressed_file, volatile uint8_t* sd_file_op
     vTaskDelay(pdMS_TO_TICKS(500));  // 缩短延迟时间
 
     // 发送启动消息
-    uint8_t start_msg[] = "\r\n=== BLE KML Task Started ===\r\n";
+    #if KML_ENABLE_JSON_MODE
+    uint8_t start_msg[] = "\r\n=== BLE KML Task Started (JSON Mode) ===\r\n";
+    #else
+    uint8_t start_msg[] = "\r\n=== BLE KML Task Started (BIN Mode) ===\r\n";
+    #endif
     HAL_UART_Transmit(&huart1, start_msg, strlen((char*)start_msg), 100);
     
     // 初始化系统
@@ -721,8 +845,13 @@ void kml_ble_task_main(const char* compressed_file, volatile uint8_t* sd_file_op
     for (;;) {
         // 检查是否需要打开文件
         if (!*sd_file_opened && !*kml_transfer_active) {
-            // 打开压缩文件并准备接收数据
+            #if KML_ENABLE_JSON_MODE
+            // JSON模式：打开JSON文件
+            res = kml_open_json_file(compressed_file, sd_file_opened, kml_transfer_active);
+            #else
+            // BIN模式：打开压缩文件
             res = kml_open_compressed_file(compressed_file, sd_file_opened, kml_transfer_active);
+            #endif
             if (res != FR_OK) {
                 vTaskDelay(pdMS_TO_TICKS(1000)); // 延迟后重试
             }
@@ -740,8 +869,13 @@ void kml_ble_task_main(const char* compressed_file, volatile uint8_t* sd_file_op
             // 保存总写入字节数
             uint32_t actual_written = total_written;
             
-            // 处理传输完成
+            #if KML_ENABLE_JSON_MODE
+            // JSON模式：处理JSON传输完成
+            kml_handle_json_transfer_complete(compressed_file, actual_written, sd_file_opened, kml_transfer_active);
+            #else
+            // BIN模式：处理压缩文件传输完成
             kml_handle_transfer_complete(compressed_file, actual_written, sd_file_opened, kml_transfer_active);
+            #endif
             
             // 重置总写入计数
             total_written = 0;

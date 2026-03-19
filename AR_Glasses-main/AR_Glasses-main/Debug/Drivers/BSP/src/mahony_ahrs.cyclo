@@ -1,0 +1,10 @@
+../Drivers/BSP/src/mahony_ahrs.c:38:14:invSqrt	1
+../Drivers/BSP/src/mahony_ahrs.c:55:6:Mahony_Init	1
+../Drivers/BSP/src/mahony_ahrs.c:85:6:Mahony_UpdateIMU	5
+../Drivers/BSP/src/mahony_ahrs.c:170:6:Mahony_ComputeAngles	1
+../Drivers/BSP/src/mahony_ahrs.c:186:7:Mahony_GetRoll	2
+../Drivers/BSP/src/mahony_ahrs.c:197:7:Mahony_GetPitch	2
+../Drivers/BSP/src/mahony_ahrs.c:208:7:Mahony_GetYaw	2
+../Drivers/BSP/src/mahony_ahrs.c:219:6:Mahony_GetQuaternion	2
+../Drivers/BSP/src/mahony_ahrs.c:232:6:Mahony_Reset	1
+../Drivers/BSP/src/mahony_ahrs.c:249:6:Mahony_SetGains	1

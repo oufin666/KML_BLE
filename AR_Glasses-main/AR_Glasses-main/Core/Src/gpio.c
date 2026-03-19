@@ -51,13 +51,24 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LCD_DC_Pin|HR_RESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(MOTOR_GPIO_Port, MOTOR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LCD_CS_Pin|LCD_BLK_Pin|LED_Pin|LCD_RES_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, HR_SDA_Pin|HR_SCL_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, LCD_CS_Pin|LCD_BLK_Pin|BLE_RST_Pin|GPIO_PIN_10
+                          |LED_Pin|GPIO_PIN_7, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, MPU_SDA_Pin|MPU_SCL_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin : MOTOR_Pin */
+  GPIO_InitStruct.Pin = MOTOR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(MOTOR_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LCD_DC_Pin */
   GPIO_InitStruct.Pin = LCD_DC_Pin;
@@ -66,80 +77,44 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LCD_DC_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LCD_CS_Pin LCD_BLK_Pin LCD_RES_Pin */
-  GPIO_InitStruct.Pin = LCD_CS_Pin|LCD_BLK_Pin|LCD_RES_Pin;
+  /*Configure GPIO pins : LCD_CS_Pin LCD_BLK_Pin */
+  GPIO_InitStruct.Pin = LCD_CS_Pin|LCD_BLK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LED_Pin */
-  GPIO_InitStruct.Pin = LED_Pin;
+  /*Configure GPIO pins : BLE_RST_Pin PB10 LED_Pin PB7 */
+  GPIO_InitStruct.Pin = BLE_RST_Pin|GPIO_PIN_10|LED_Pin|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : HR_INT_Pin */
-  GPIO_InitStruct.Pin = HR_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(HR_INT_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : HR_RESET_Pin */
-  GPIO_InitStruct.Pin = HR_RESET_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(HR_RESET_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : EC_KEY_Pin */
-  GPIO_InitStruct.Pin = EC_KEY_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(EC_KEY_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : EC_A_Pin */
-  GPIO_InitStruct.Pin = EC_A_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(EC_A_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : EC_B_Pin */
-  GPIO_InitStruct.Pin = EC_B_Pin;
+  /*Configure GPIO pins : BLE_KEY_Pin BLE_LINK_Pin */
+  GPIO_InitStruct.Pin = BLE_KEY_Pin|BLE_LINK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(EC_B_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : HR_SDA_Pin HR_SCL_Pin */
-  GPIO_InitStruct.Pin = HR_SDA_Pin|HR_SCL_Pin;
+  /*Configure GPIO pin : MPU_INT_Pin */
+  GPIO_InitStruct.Pin = MPU_INT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(MPU_INT_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : MPU_SDA_Pin MPU_SCL_Pin */
+  GPIO_InitStruct.Pin = MPU_SDA_Pin|MPU_SCL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI3_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 3, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
 }
 
 /* USER CODE BEGIN 2 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	if(GPIO_Pin == EC_A_Pin)
-	{
-		Encoder_Rotate_IRQHandler();
-
-	}else if(GPIO_Pin == EC_KEY_Pin){
-		Encoder_Press_IRQHandler();
-	}else if(GPIO_Pin == HR_INT_Pin){
-//		hal_gh3x2x_int_handler_call_back();
-	}
+    (void)GPIO_Pin;
+    // 外部中断回调 - 当前无使用
 }
 /* USER CODE END 2 */

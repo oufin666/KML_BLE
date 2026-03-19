@@ -1,0 +1,260 @@
+#include "mpu6050.h"
+#include <string.h>
+
+/* ==================== 私有函数声明 ==================== */
+
+/**
+ * @brief  等待 I2C 传输完成（带超时）
+ * @param  hi2c: I2C 句柄指针
+ * @param  timeout: 超时时间（毫秒）
+ * @retval 0-成功 | 1-超时失败
+ */
+static uint8_t MPU6050_WaitI2C(I2C_HandleTypeDef *hi2c, uint32_t timeout);
+
+/* ==================== 私有函数实现 ==================== */
+
+/**
+ * @brief  等待 I2C 传输完成
+ */
+static uint8_t MPU6050_WaitI2C(I2C_HandleTypeDef *hi2c, uint32_t timeout)
+{
+    uint32_t tick_start = HAL_GetTick();
+    
+    while (HAL_I2C_GetState(hi2c) != HAL_I2C_STATE_READY) {
+        if ((HAL_GetTick() - tick_start) > timeout) {
+            return 1;  // 超时失败
+        }
+    }
+    
+    return 0;  // 成功
+}
+
+/* ==================== 公有函数实现 ==================== */
+
+/**
+ * @brief  向 MPU6050 写入寄存器数据
+ */
+uint8_t MPU6050_WriteReg(I2C_HandleTypeDef *hi2c, uint8_t reg_addr, uint8_t data)
+{
+    uint8_t buffer[2] = {reg_addr, data};
+    
+    if (HAL_I2C_Master_Transmit(hi2c, MPU6050_ADDRESS, buffer, 2, 100) != HAL_OK) {
+        return 1;  // 写入失败
+    }
+    
+    if (MPU6050_WaitI2C(hi2c, 100) != 0) {
+        return 1;  // 等待超时
+    }
+    
+    return 0;  // 成功
+}
+
+/**
+ * @brief  从 MPU6050 读取寄存器数据
+ */
+uint8_t MPU6050_ReadReg(I2C_HandleTypeDef *hi2c, uint8_t reg_addr)
+{
+    uint8_t data = 0xFF;  // 默认错误值
+    
+    /* 发送寄存器地址 */
+    if (HAL_I2C_Master_Transmit(hi2c, MPU6050_ADDRESS, &reg_addr, 1, 100) != HAL_OK) {
+        return data;
+    }
+    
+    if (MPU6050_WaitI2C(hi2c, 100) != 0) {
+        return data;
+    }
+    
+    /* 读取寄存器数据 */
+    if (HAL_I2C_Master_Receive(hi2c, MPU6050_ADDRESS, &data, 1, 100) != HAL_OK) {
+        return 0xFF;
+    }
+    
+    if (MPU6050_WaitI2C(hi2c, 100) != 0) {
+        return 0xFF;
+    }
+    
+    return data;
+}
+
+/**
+ * @brief  获取 MPU6050 的 ID
+ */
+uint8_t MPU6050_GetID(I2C_HandleTypeDef *hi2c)
+{
+    return MPU6050_ReadReg(hi2c, MPU6050_WHO_AM_I);
+}
+
+/**
+ * @brief  初始化 MPU6050
+ */
+uint8_t MPU6050_Init(I2C_HandleTypeDef *hi2c)
+{
+    uint8_t id;
+    
+    /* 检查 I2C 句柄 */
+    if (hi2c == NULL) {
+        return 1;
+    }
+    
+    /* 延迟等待 MPU6050 上电稳定 */
+    HAL_Delay(100);
+    
+    /* 验证设备 ID */
+    id = MPU6050_GetID(hi2c);
+    if (id != MPU6050_ID) {
+        return 1;  // ID 不匹配，设备不存在或通信失败
+    }
+    
+    /* 配置电源管理寄存器 1：取消睡眠模式，选择时钟源为 X 轴陀螺仪 */
+    if (MPU6050_WriteReg(hi2c, MPU6050_PWR_MGMT_1, 0x01) != 0) {
+        return 1;
+    }
+    HAL_Delay(10);
+    
+    /* 配置电源管理寄存器 2：所有轴均不待机 */
+    if (MPU6050_WriteReg(hi2c, MPU6050_PWR_MGMT_2, 0x00) != 0) {
+        return 1;
+    }
+    
+    /* 配置采样率分频寄存器 */
+    if (MPU6050_WriteReg(hi2c, MPU6050_SMPLRT_DIV, 0x09) != 0) {
+        return 1;
+    }
+    
+    /* 配置 DLPF（数字低通滤波器） */
+    if (MPU6050_WriteReg(hi2c, MPU6050_CONFIG, 0x06) != 0) {
+        return 1;
+    }
+    
+    /* 配置陀螺仪：满量程 ±2000°/s */
+    if (MPU6050_WriteReg(hi2c, MPU6050_GYRO_CONFIG, 0x18) != 0) {
+        return 1;
+    }
+    
+    /* 配置加速度计：满量程 ±16g */
+    if (MPU6050_WriteReg(hi2c, MPU6050_ACCEL_CONFIG, 0x18) != 0) {
+        return 1;
+    }
+    
+    HAL_Delay(50);
+    
+    return 0;  // 初始化成功
+}
+
+/**
+ * @brief  读取 MPU6050 的六个原始数据（结构体版本）
+ */
+uint8_t MPU6050_GetRawData(I2C_HandleTypeDef *hi2c, MPU6050_RawData_t *raw_data)
+{
+    uint8_t buffer[12];  // 存储 6 个 16 位数据（12 字节）
+    uint8_t start_addr = MPU6050_ACCEL_XOUT_H;
+    
+    if (raw_data == NULL) {
+        return 1;
+    }
+    
+    /* 一次性读取 12 字节数据（从加速度计 X 高字节到陀螺仪 Z 低字节） */
+    if (HAL_I2C_Master_Transmit(hi2c, MPU6050_ADDRESS, &start_addr, 1, 100) != HAL_OK) {
+        return 1;
+    }
+    
+    if (MPU6050_WaitI2C(hi2c, 100) != 0) {
+        return 1;
+    }
+    
+    if (HAL_I2C_Master_Receive(hi2c, MPU6050_ADDRESS, buffer, 12, 100) != HAL_OK) {
+        return 1;
+    }
+    
+    if (MPU6050_WaitI2C(hi2c, 100) != 0) {
+        return 1;
+    }
+    
+    /* 数据拼接（高字节在前，低字节在后） */
+    raw_data->accel_x = (int16_t)((buffer[0] << 8) | buffer[1]);
+    raw_data->accel_y = (int16_t)((buffer[2] << 8) | buffer[3]);
+    raw_data->accel_z = (int16_t)((buffer[4] << 8) | buffer[5]);
+    raw_data->gyro_x  = (int16_t)((buffer[6] << 8) | buffer[7]);
+    raw_data->gyro_y  = (int16_t)((buffer[8] << 8) | buffer[9]);
+    raw_data->gyro_z  = (int16_t)((buffer[10] << 8) | buffer[11]);
+    
+    return 0;  // 成功
+}
+
+/**
+ * @brief  读取 MPU6050 的六个原始数据（指针参数版本）
+ */
+uint8_t MPU6050_GetData(I2C_HandleTypeDef *hi2c, 
+                        int16_t *accel_x, int16_t *accel_y, int16_t *accel_z,
+                        int16_t *gyro_x, int16_t *gyro_y, int16_t *gyro_z)
+{
+    MPU6050_RawData_t raw_data;
+    
+    /* 参数检查 */
+    if (accel_x == NULL || accel_y == NULL || accel_z == NULL ||
+        gyro_x == NULL || gyro_y == NULL || gyro_z == NULL) {
+        return 1;
+    }
+    
+    /* 读取原始数据 */
+    if (MPU6050_GetRawData(hi2c, &raw_data) != 0) {
+        return 1;
+    }
+    
+    /* 通过指针返回数据 */
+    *accel_x = raw_data.accel_x;
+    *accel_y = raw_data.accel_y;
+    *accel_z = raw_data.accel_z;
+    *gyro_x  = raw_data.gyro_x;
+    *gyro_y  = raw_data.gyro_y;
+    *gyro_z  = raw_data.gyro_z;
+    
+    return 0;  // 成功
+}
+
+/**
+ * @brief  MPU6050 测试任务函数（在FreeRTOS任务中调用）
+ */
+void MPU6050_TestTask(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart)
+{
+    MPU6050_RawData_t raw_data;
+    uint8_t init_status;
+    uint8_t id;
+    char tx_buffer[128];
+    
+    /* 读取 ID 进行调试 */
+    id = MPU6050_GetID(hi2c);
+    sprintf(tx_buffer, "[MPU6050] Read ID: 0x%02X\r\n", id);
+    HAL_UART_Transmit(huart, (uint8_t*)tx_buffer, strlen(tx_buffer), 100);
+    
+    /* 初始化 MPU6050 */
+    init_status = MPU6050_Init(hi2c);
+    if (init_status != 0) {
+        sprintf(tx_buffer, "[MPU6050] Init Failed! ID read: 0x%02X\r\n", id);
+        HAL_UART_Transmit(huart, (uint8_t*)tx_buffer, strlen(tx_buffer), 100);
+        return;
+    }
+    
+    sprintf(tx_buffer, "[MPU6050] Init Success! ID: 0x%02X\r\n", MPU6050_GetID(hi2c));
+    HAL_UART_Transmit(huart, (uint8_t*)tx_buffer, strlen(tx_buffer), 100);
+    
+    /* 测试循环 */
+    for (;;) {
+        /* 读取原始数据 */
+        if (MPU6050_GetRawData(hi2c, &raw_data) == 0) {
+            /* 格式化输出数据 */
+            sprintf(tx_buffer, "Accel: X=%6d Y=%6d Z=%6d | Gyro: X=%6d Y=%6d Z=%6d\r\n",
+                    raw_data.accel_x, raw_data.accel_y, raw_data.accel_z,
+                    raw_data.gyro_x, raw_data.gyro_y, raw_data.gyro_z);
+            HAL_UART_Transmit(huart, (uint8_t*)tx_buffer, strlen(tx_buffer), 100);
+        } else {
+            sprintf(tx_buffer, "[MPU6050] Read Error!\r\n");
+            HAL_UART_Transmit(huart, (uint8_t*)tx_buffer, strlen(tx_buffer), 100);
+        }
+        
+        /* 延时 500ms */
+        HAL_Delay(500);
+    }
+}
+

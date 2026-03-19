@@ -34,26 +34,35 @@
 #include "APP.h"
 #include "kml_parse_v2.h"
 #include "../../Drivers/BSP/inc/kml_utils.h"
+//#include "../../Drivers/BSP/inc/mpu6050.h"
 #include <string.h>
 #include <stdio.h>
 /* USER CODE END Includes */
 
-
-
+/* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
 
+/* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
 /* USER CODE END PD */
 
+/* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 
 /* USER CODE END PM */
 
-/* USER CODE BEGIN PV */
-// 外部变量声明
+/* Private variables ---------------------------------------------------------*/
+/* USER CODE BEGIN Variables */
+GPS_Data GPS_data_share; //别的任务可以拿到的GPS数据
+
+GPS_Data GPS_data;
+uint8_t buf[GPS_UART_BUF_SIZE];
+uint8_t gps_data_change;
+
+// BLE KML相关变量声明
 extern StreamBufferHandle_t kml_stream_buf;
 extern SemaphoreHandle_t kml_file_sem;
 extern FIL SDFile;  // SDFile在fatfs.c中定义，这里声明为外部变量
@@ -65,29 +74,19 @@ volatile uint8_t kml_transfer_active = 0;   // KML传输激活标志
 
 // 外部数据缓冲区变量声明（在usart.c中定义）
 extern volatile uint8_t transfer_complete;
-/* USER CODE END PV */
-
-/* USER CODE BEGIN Variables */
-GPS_Data GPS_data_share; //别的任务可以拿到的GPS数据
-
-GPS_Data GPS_data;
-uint8_t buf[GPS_UART_BUF_SIZE];
-uint8_t gps_data_change;
-
-
 /* USER CODE END Variables */
 /* Definitions for TaskMain */
 osThreadId_t TaskMainHandle;
 const osThreadAttr_t TaskMain_attributes = {
   .name = "TaskMain",
-  .stack_size = 4096 * 4,
+  .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for GPS_Task */
 osThreadId_t GPS_TaskHandle;
 const osThreadAttr_t GPS_Task_attributes = {
   .name = "GPS_Task",
-  .stack_size = 1024 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for HR_Task */
@@ -97,11 +96,11 @@ const osThreadAttr_t HR_Task_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-// ★新增：BLE KML任务的句柄和属性
+/* Definitions for BLE_KML_Task */
 osThreadId_t BLE_KML_TaskHandle;
 const osThreadAttr_t BLE_KML_Task_attributes = {
   .name = "BLE_KML_Task",
-  .stack_size = 2048 * 4,  // 足够处理文件操作的栈大小
+  .stack_size = 2048 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
@@ -115,6 +114,7 @@ void StartBLEKMLTask(void *argument);
 void StartTaskMain(void *argument);
 void StartGPSTask(void *argument);
 void StartTaskHR(void *argument);
+void StartBLEKMLTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -161,16 +161,16 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  // /* creation of TaskMain */
-  // TaskMainHandle = osThreadNew(StartTaskMain, NULL, &TaskMain_attributes);
+  /* creation of TaskMain */
+//   TaskMainHandle = osThreadNew(StartTaskMain, NULL, &TaskMain_attributes);
 
-  // /* creation of GPS_Task */
-  // GPS_TaskHandle = osThreadNew(StartGPSTask, NULL, &GPS_Task_attributes);
+  /* creation of GPS_Task */
+//   GPS_TaskHandle = osThreadNew(StartGPSTask, NULL, &GPS_Task_attributes);
 
   /* creation of HR_Task */
   HR_TaskHandle = osThreadNew(StartTaskHR, NULL, &HR_Task_attributes);
 
-  // ★新增：创建BLE KML任务
+  /* creation of BLE_KML_Task */
   BLE_KML_TaskHandle = osThreadNew(StartBLEKMLTask, NULL, &BLE_KML_Task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -204,15 +204,28 @@ void StartTaskMain(void *argument)
 */
 //	lv_example_hr_display();
 //	lvgl_st7789_test_page_create();
-//	App_Init();
 
-	const char* kml_file_path = "0:/track/HK100.kml";
-	parse_kml_file(kml_file_path);
-	filter_kml_lines(FILE_LINE_NAME, FILE_LINE_FILTERED_NAME);
-	load_segment_to_global_buffer(FILE_LINE_NAME,2);
-	App_Init();
+	// 标记是否已初始化
+	static uint8_t initialized = 0;
+	
 	/* Infinite loop */
 	for (;;) {
+		// 只初始化一次
+		if (!initialized) {
+			initialized = 1;
+			
+			// 尝试初始化KML文件
+			const char* kml_file_path = "0:/track/HK100.kml";
+			int result = parse_kml_file(kml_file_path);
+			if (result == KML_OK) {
+				filter_kml_lines(FILE_LINE_NAME, FILE_LINE_FILTERED_NAME);
+				load_segment_to_global_buffer(FILE_LINE_NAME, 2);
+			}
+			
+			// 初始化应用
+			App_Init();
+		}
+
 /*
 		if (xSemaphoreTake(gps_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
 
@@ -249,14 +262,9 @@ void StartGPSTask(void *argument)
 		if (UART_ReadFrame(buf) == 1) {
 
 			if (GPS_Parse((const char*) buf, &GPS_data) == 1) {
-				if (xSemaphoreTake(gps_mutex, pdMS_TO_TICKS(500)) == pdTRUE) {
-					// 安全写入全局结构体
-					memcpy(&GPS_data_share, &GPS_data, sizeof(GPS_Data));
-					//GPS_data_share = GPS_data;
-					gps_data_change = 1;
-					// 释放互斥锁（必须执行，否则其他任务会阻塞）
-					xSemaphoreGive(gps_mutex);
-				}
+				// 直接写入全局结构体（暂时不需要互斥锁，因为GPS功能未启用）
+				memcpy(&GPS_data_share, &GPS_data, sizeof(GPS_Data));
+				gps_data_change = 1;
 			}
 		}
 		vTaskDelay(pdMS_TO_TICKS(100));
@@ -276,6 +284,10 @@ void StartTaskHR(void *argument)
 {
   /* USER CODE BEGIN StartTaskHR */
 //	while(Gh3x2xDemoInit()!=GH3X2X_RET_OK);
+
+	// MPU6050 测试：初始化并循环读取数据通过串口输出
+	// 使用 USART1 输出调试信息，波特率 115200
+
 	/* Infinite loop */
 	for (;;) {
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
@@ -284,7 +296,6 @@ void StartTaskHR(void *argument)
   /* USER CODE END StartTaskHR */
 }
 
-// ★流式写入：BLE KML 任务 - 从串口接收数据并流式写入SD卡
 /* USER CODE BEGIN Header_StartBLEKMLTask */
 /**
  * @brief Function implementing the BLE_KML_Task thread.
@@ -295,10 +306,14 @@ void StartTaskHR(void *argument)
 void StartBLEKMLTask(void *argument)
 {
   /* USER CODE BEGIN StartBLEKMLTask */
-  const char* compressed_file = "0:/kml/compressed_kml.bin";  // 存储压缩数据
+  #if KML_ENABLE_JSON_MODE
+  const char* file_path = "0:/kml/data.json";  // JSON模式：存储JSON字符串
+  #else
+  const char* file_path = "0:/kml/compressed_kml.bin";  // BIN模式：存储压缩数据
+  #endif
   
   // 调用封装的BLE KML任务主函数
-  kml_ble_task_main(compressed_file, &sd_file_opened, &kml_transfer_active, &transfer_complete);
+  kml_ble_task_main(file_path, &sd_file_opened, &kml_transfer_active, &transfer_complete);
   
   /* USER CODE END StartBLEKMLTask */
 }
@@ -307,3 +322,4 @@ void StartBLEKMLTask(void *argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
+

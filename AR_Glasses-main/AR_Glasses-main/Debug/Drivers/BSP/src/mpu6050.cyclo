@@ -1,0 +1,8 @@
+../Drivers/BSP/src/mpu6050.c:41:9:MPU6050_WriteReg	1
+../Drivers/BSP/src/mpu6050.c:66:9:MPU6050_ReadReg	1
+../Drivers/BSP/src/mpu6050.c:100:9:MPU6050_GetID	1
+../Drivers/BSP/src/mpu6050.c:108:9:MPU6050_Init	8
+../Drivers/BSP/src/mpu6050.c:161:9:MPU6050_GetRawData	3
+../Drivers/BSP/src/mpu6050.c:206:9:MPU6050_GetData	8
+../Drivers/BSP/src/mpu6050.c:234:9:MPU6050_Test	5
+../Drivers/BSP/src/mpu6050.c:284:6:MPU6050_TestTask	4

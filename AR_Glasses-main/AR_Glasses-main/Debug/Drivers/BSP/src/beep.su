@@ -1,0 +1,4 @@
+../Drivers/BSP/src/beep.c:7:6:BEEP_Init	8	static
+../Drivers/BSP/src/beep.c:15:6:BEEP_Update	24	static
+../Drivers/BSP/src/beep.c:60:6:BEEP_On	8	static
+../Drivers/BSP/src/beep.c:67:6:BEEP_Off	8	static

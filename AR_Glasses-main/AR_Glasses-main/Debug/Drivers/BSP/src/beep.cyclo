@@ -1,0 +1,4 @@
+../Drivers/BSP/src/beep.c:7:6:BEEP_Init	1
+../Drivers/BSP/src/beep.c:15:6:BEEP_Update	5
+../Drivers/BSP/src/beep.c:60:6:BEEP_On	1
+../Drivers/BSP/src/beep.c:67:6:BEEP_Off	1

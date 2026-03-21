@@ -88,6 +88,8 @@ void Error_Handler(void);
 #define LCD_BLK_GPIO_Port GPIOB
 #define BLE_RST_Pin GPIO_PIN_2
 #define BLE_RST_GPIO_Port GPIOB
+#define PWR_EN_Pin GPIO_PIN_10
+#define PWR_EN_GPIO_Port GPIOB
 #define LED_Pin GPIO_PIN_12
 #define LED_GPIO_Port GPIOB
 #define BLE_KEY_Pin GPIO_PIN_11
@@ -96,10 +98,10 @@ void Error_Handler(void);
 #define BLE_LINK_GPIO_Port GPIOA
 #define MPU_INT_Pin GPIO_PIN_6
 #define MPU_INT_GPIO_Port GPIOB
-#define MPU_SDA_Pin GPIO_PIN_8
-#define MPU_SDA_GPIO_Port GPIOB
-#define MPU_SCL_Pin GPIO_PIN_9
-#define MPU_SCL_GPIO_Port GPIOB
+#define SOFT_I2C_SDA_Pin GPIO_PIN_8
+#define SOFT_I2C_SDA_GPIO_Port GPIOB
+#define SOFT_I2C_SCL_Pin GPIO_PIN_9
+#define SOFT_I2C_SCL_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define  GPS_USART  USART2

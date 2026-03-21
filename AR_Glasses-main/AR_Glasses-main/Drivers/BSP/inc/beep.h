@@ -4,7 +4,7 @@
 #include "main.h"
 
 void BEEP_Init(void);
-void BEEP_SetVolume(uint8_t volume);
+void BEEP_Update(void);
 void BEEP_On(void);
 void BEEP_Off(void);
 

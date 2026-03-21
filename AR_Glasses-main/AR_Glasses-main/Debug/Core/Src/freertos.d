@@ -275,7 +275,13 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
  ../Drivers/BSP/GH3220/Kernel_code/module/gh_soft_adt/gh_multi_sen_pro.h \
  ../Core/USER/APP/inc/testPage.h ../Core/USER/APP/inc/APP.h \
  ../Core/USER/Utils/Track_Parse/inc/kml_parse_v2.h \
- ../Core/Src/../../Drivers/BSP/inc/kml_utils.h
+ ../Core/Src/../../Drivers/BSP/inc/kml_utils.h \
+ ../Core/Src/../../Drivers/BSP/inc/mpu6050.h \
+ ../Core/Src/../../Drivers/BSP/inc/soft_i2c.h \
+ ../Core/Src/../../Drivers/BSP/inc/imu_filter.h \
+ ../Core/Src/../../Drivers/BSP/inc/mahony_ahrs.h \
+ ../Core/Src/../../Drivers/BSP/inc/beep.h \
+ ../Core/Src/../../Drivers/BSP/inc/motor.h
 ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
 ../Core/Inc/FreeRTOSConfig.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
@@ -562,3 +568,9 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
 ../Core/USER/APP/inc/APP.h:
 ../Core/USER/Utils/Track_Parse/inc/kml_parse_v2.h:
 ../Core/Src/../../Drivers/BSP/inc/kml_utils.h:
+../Core/Src/../../Drivers/BSP/inc/mpu6050.h:
+../Core/Src/../../Drivers/BSP/inc/soft_i2c.h:
+../Core/Src/../../Drivers/BSP/inc/imu_filter.h:
+../Core/Src/../../Drivers/BSP/inc/mahony_ahrs.h:
+../Core/Src/../../Drivers/BSP/inc/beep.h:
+../Core/Src/../../Drivers/BSP/inc/motor.h:

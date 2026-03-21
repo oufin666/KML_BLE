@@ -121,13 +121,17 @@
 
 #### 4.5 MPU6050传感器 (I2C1)
 
+MPU6050支持两种I2C通信方式：**硬件I2C** 和 **软件I2C**。请根据您的硬件版本选择合适的配置方式。
+
+##### 方式一：硬件I2C（推荐，适用于新版PCB）
+
 | 引脚 | 模式 | 配置 | 说明 |
 |------|------|------|------|
-| PB9 | I2C1_SCL | Pull-up | I2C时钟线 |
-| PB8 | I2C1_SDA | Pull-up | I2C数据线 |
+| PB9 | I2C1_SDA | Pull-up | I2C数据线 |
+| PB8 | I2C1_SCL | Pull-up | I2C时钟线 |
 | PB6 | GPIO_Input | Pull-up | MPU_INT 中断引脚 |
 
-**I2C1详细配置步骤**：
+**硬件I2C详细配置步骤**：
 
 1. **启用I2C1外设**
    - 左侧菜单 → Connectivity → I2C1
@@ -155,6 +159,62 @@
 - I2C 的 SDA 和 SCL 引脚必须配置为 **Open Drain** 模式
 - 必须启用 **内部上拉** 或外部接上拉电阻（4.7kΩ典型值）
 - 如果MPU6050没有响应，尝试降低I2C时钟速度到100kHz
+
+##### 方式二：软件I2C（适用于旧版PCB，SDA/SCL引脚反接）
+
+**适用场景**：如果您的PCB上 PB8 连接到了 MPU6050 的 SDA，PB9 连接到了 MPU6050 的 SCL（引脚反接），请使用软件I2C方式。
+
+| 引脚 | 模式 | 配置 | 说明 |
+|------|------|------|------|
+| PB8 | GPIO_Output | Output Open Drain, Pull-up | 软件I2C - SDA（连接到MPU6050的SDA） |
+| PB9 | GPIO_Output | Output Open Drain, Pull-up | 软件I2C - SCL（连接到MPU6050的SCL） |
+| PB6 | GPIO_Input | Pull-up | MPU_INT 中断引脚 |
+
+**软件I2C详细配置步骤**：
+
+1. **配置GPIO引脚（不启用I2C外设）**
+   - 左侧菜单 → System Core → GPIO
+   - 或直接在引脚视图中点击 PB8 和 PB9
+
+2. **配置PB8（软件SDA）**
+   - 点击 PB8 引脚
+   - **GPIO mode**: GPIO_Output
+   - **GPIO output level**: High
+   - **GPIO mode**: Output Open Drain（开漏输出，模拟I2C）
+   - **GPIO Pull-up/Pull-down**: Pull-up (必须配置上拉！)
+   - **Maximum output speed**: Very High
+   - **User Label**: SOFT_I2C_SDA
+
+3. **配置PB9（软件SCL）**
+   - 点击 PB9 引脚
+   - **GPIO mode**: GPIO_Output
+   - **GPIO output level**: High
+   - **GPIO mode**: Output Open Drain（开漏输出，模拟I2C）
+   - **GPIO Pull-up/Pull-down**: Pull-up (必须配置上拉！)
+   - **Maximum output speed**: Very High
+   - **User Label**: SOFT_I2C_SCL
+
+4. **配置中断引脚 (可选)**
+   - PB6 配置为 GPIO_Input
+   - **GPIO Pull-up/Pull-down**: Pull-up
+
+**重要提示**：
+- 软件I2C不需要启用I2C1外设
+- 引脚必须配置为 **Open Drain** 模式，以模拟I2C的开漏特性
+- 必须启用 **内部上拉** 或外部接上拉电阻（4.7kΩ典型值）
+- 软件I2C的通信速度比硬件I2C慢，但足够MPU6050使用
+
+##### 如何选择I2C模式
+
+在代码中，通过修改宏定义来选择使用硬件I2C还是软件I2C：
+
+```c
+// 在 mpu6050.h 或配置文件中修改此宏定义
+#define MPU6050_USE_SOFT_I2C    1   // 1: 使用软件I2C, 0: 使用硬件I2C
+```
+
+- **新版PCB**：设置 `MPU6050_USE_SOFT_I2C` 为 `0`，使用硬件I2C
+- **旧版PCB（引脚反接）**：设置 `MPU6050_USE_SOFT_I2C` 为 `1`，使用软件I2C
 
 #### 4.6 蜂鸣器驱动 (PWM)
 

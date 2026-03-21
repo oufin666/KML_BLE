@@ -5,6 +5,7 @@
 
 void MOTOR_Init(void);
 void MOTOR_SetSpeed(uint8_t speed);
+void MOTOR_Update(void);
 void MOTOR_On(void);
 void MOTOR_Off(void);
 

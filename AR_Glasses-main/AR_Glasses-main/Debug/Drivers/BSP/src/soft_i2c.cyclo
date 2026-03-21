@@ -1,0 +1,11 @@
+../Drivers/BSP/src/soft_i2c.c:11:13:Soft_I2C_Delay	2
+../Drivers/BSP/src/soft_i2c.c:24:6:Soft_I2C_Init	1
+../Drivers/BSP/src/soft_i2c.c:43:6:Soft_I2C_Start	1
+../Drivers/BSP/src/soft_i2c.c:57:6:Soft_I2C_Stop	1
+../Drivers/BSP/src/soft_i2c.c:69:9:Soft_I2C_WaitAck	2
+../Drivers/BSP/src/soft_i2c.c:93:6:Soft_I2C_SendAck	2
+../Drivers/BSP/src/soft_i2c.c:114:6:Soft_I2C_SendByte	3
+../Drivers/BSP/src/soft_i2c.c:141:9:Soft_I2C_ReceiveByte	3
+../Drivers/BSP/src/soft_i2c.c:171:9:Soft_I2C_WriteReg	4
+../Drivers/BSP/src/soft_i2c.c:201:9:Soft_I2C_ReadReg	4
+../Drivers/BSP/src/soft_i2c.c:237:9:Soft_I2C_ReadMultiBytes	8

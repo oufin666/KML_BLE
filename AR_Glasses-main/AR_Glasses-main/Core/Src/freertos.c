@@ -365,8 +365,7 @@ void StartTaskHR(void *argument)
 			HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);		
 		}
 		
-		// 持续更新蜂鸣器PWM（4kHz，占空比50%）
-		BEEP_Update();
+		// 持续更新蜂鸣器PWM（4kHz，占空比50%）- 已移至TIM4中断处理
 		
 		// 持续更新电机PWM（100Hz，占空比50%）
 		MOTOR_Update();

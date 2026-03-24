@@ -3,7 +3,7 @@
 
 // 全局变量，用于跟踪PWM状态
 static uint8_t beep_state = 0;
-static uint8_t beep_enabled = 0;
+uint8_t beep_enabled = 0;
 
 void BEEP_Init(void)
 {
@@ -18,7 +18,7 @@ void BEEP_Init(void)
 
 void BEEP_Update(void)
 {
-    // TIM3中断频率为8kHz，每次中断翻转一次GPIO，产生4kHz PWM
+    // TIM3中断频率为6kHz，每次中断翻转一次GPIO，产生3kHz PWM
     if (!beep_enabled) {
         return;
     }

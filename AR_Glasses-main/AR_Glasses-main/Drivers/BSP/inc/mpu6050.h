@@ -115,39 +115,96 @@ uint8_t MPU6050_GetID(I2C_HandleTypeDef *hi2c);
  */
 uint8_t MPU6050_GetRawData(I2C_HandleTypeDef *hi2c, MPU6050_RawData_t *raw_data);
 
-/**
- * @brief  读取 MPU6050 的六个原始数据（使用指针参数）
- * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
- * @param  accel_x: 加速度计X轴指针
- * @param  accel_y: 加速度计Y轴指针
- * @param  accel_z: 加速度计Z轴指针
- * @param  gyro_x: 陀螺仪X轴指针
- * @param  gyro_y: 陀螺仪Y轴指针
- * @param  gyro_z: 陀螺仪Z轴指针
- * @retval 0-成功 | 1-失败
- */
-uint8_t MPU6050_GetData(I2C_HandleTypeDef *hi2c, 
-                        int16_t *accel_x, int16_t *accel_y, int16_t *accel_z,
-                        int16_t *gyro_x, int16_t *gyro_y, int16_t *gyro_z);
+
 
 /**
- * @brief  MPU6050 测试函数（执行一次性测试）
+ * @brief  MPU6050 运行自检（初始化并测试数据读取）
  * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
  * @param  huart: 串口句柄指针，用于输出调试信息
  * @param  raw_data: 用于存储读取的原始数据（可为NULL）
  * @retval 0-初始化成功且数据读取成功 | 1-初始化失败 | 2-初始化成功但数据读取失败
- * @note   此函数执行一次性测试，返回测试结果
+ * @note   此函数执行一次性自检，返回测试结果
  */
-uint8_t MPU6050_Test(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart, MPU6050_RawData_t *raw_data);
+uint8_t MPU6050_RunSelfTest(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart, MPU6050_RawData_t *raw_data);
 
 /**
- * @brief  MPU6050 测试任务函数（在FreeRTOS任务中调用）
+ * @brief  MPU6050 启动数据监控任务（在FreeRTOS任务中调用）
  * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
  * @param  huart: 串口句柄指针，用于输出调试信息
  * @retval None
  * @note   此函数会循环读取MPU6050数据并通过串口打印，适合在单独任务中调用
  *         输出格式：Accel: X=xxxx Y=xxxx Z=xxxx | Gyro: X=xxxx Y=xxxx Z=xxxx
  */
-void MPU6050_TestTask(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart);
+void MPU6050_StartDataMonitorTask(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart);
+
+/**
+ * @brief  MPU6050 初始化和数据读取封装函数
+ * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
+ * @param  huart: 串口句柄指针，用于输出调试信息
+ * @param  raw_data: 存储原始数据的结构体指针
+ * @retval 0-成功 | 1-失败
+ * @note   第一次调用时会自动进行初始化，后续调用直接读取数据
+ */
+uint8_t MPU6050_InitAndRead(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart, MPU6050_RawData_t *raw_data);
+
+/**
+ * @brief  MPU6050 读取数据并计算姿态角的封装函数
+ * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
+ * @param  huart: 串口句柄指针，用于输出调试信息
+ * @param  raw_data: 存储原始数据的结构体指针
+ * @param  roll: 存储Roll角的指针（可为NULL）
+ * @param  pitch: 存储Pitch角的指针（可为NULL）
+ * @param  yaw: 存储Yaw角的指针（可为NULL）
+ * @retval 0-成功 | 1-失败
+ * @note   会自动处理IMU数据滤波和姿态角计算
+ */
+uint8_t MPU6050_ReadAndCalculateAttitude(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart, 
+                                         MPU6050_RawData_t *raw_data, 
+                                         float *roll, float *pitch, float *yaw);
+
+/**
+ * @brief  系统初始化函数，包含I2C、IMU滤波器和MPU6050的初始化
+ * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
+ * @param  huart: 串口句柄指针，用于输出调试信息
+ * @param  raw_data: 存储原始数据的结构体指针
+ * @retval 0-成功 | 1-失败
+ */
+uint8_t MPU6050_SystemInit(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart, MPU6050_RawData_t *raw_data);
+
+/**
+ * @brief  获取Roll角（横滚角）
+ * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
+ * @param  huart: 串口句柄指针，用于输出调试信息（可为NULL）
+ * @retval Roll角（度），返回0表示获取失败
+ * @note   调用此函数会自动读取数据并计算Roll角
+ */
+float MPU6050_GetRoll(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart);
+
+/**
+ * @brief  获取Pitch角（俯仰角）
+ * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
+ * @param  huart: 串口句柄指针，用于输出调试信息（可为NULL）
+ * @retval Pitch角（度），返回0表示获取失败
+ * @note   调用此函数会自动读取数据并计算Pitch角
+ */
+float MPU6050_GetPitch(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart);
+
+/**
+ * @brief  检测翻腕状态（通过检测pitch角的大变化）
+ * @param  current_pitch: 当前的pitch角（度）
+ * @retval 1-检测到翻腕，0-未检测到翻腕
+ * @note   基于pitch角的变化检测翻腕动作
+ */
+int8_t MPU6050_DetectWristRaise(float current_pitch);
+
+/**
+ * @brief  封装的翻腕检测任务函数
+ * @param  hi2c: I2C 句柄指针（硬件I2C模式使用，软件I2C模式传NULL）
+ * @param  huart: 串口句柄指针，用于输出调试信息
+ * @param  interval: 检测间隔（毫秒）
+ * @retval 无
+ * @note   此函数实现了完整的翻腕检测功能，包括初始化、数据读取和翻腕检测
+ */
+void MPU6050_WristRaiseTask(I2C_HandleTypeDef *hi2c, UART_HandleTypeDef *huart, uint32_t interval);
 
 #endif /* __MPU6050_H */

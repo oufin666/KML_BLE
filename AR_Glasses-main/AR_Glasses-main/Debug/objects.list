@@ -79,6 +79,7 @@
 "./Drivers/BSP/src/Encoder.o"
 "./Drivers/BSP/src/GH3220.o"
 "./Drivers/BSP/src/GPS.o"
+"./Drivers/BSP/src/KEY.o"
 "./Drivers/BSP/src/LCD.o"
 "./Drivers/BSP/src/LCD_TK024F3036.o"
 "./Drivers/BSP/src/SD_opera.o"

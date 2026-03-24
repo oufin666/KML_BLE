@@ -281,7 +281,8 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
  ../Core/Src/../../Drivers/BSP/inc/imu_filter.h \
  ../Core/Src/../../Drivers/BSP/inc/mahony_ahrs.h \
  ../Core/Src/../../Drivers/BSP/inc/beep.h \
- ../Core/Src/../../Drivers/BSP/inc/motor.h
+ ../Core/Src/../../Drivers/BSP/inc/motor.h \
+ ../Core/Src/../../Drivers/BSP/inc/KEY.h
 ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
 ../Core/Inc/FreeRTOSConfig.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
@@ -574,3 +575,4 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
 ../Core/Src/../../Drivers/BSP/inc/mahony_ahrs.h:
 ../Core/Src/../../Drivers/BSP/inc/beep.h:
 ../Core/Src/../../Drivers/BSP/inc/motor.h:
+../Core/Src/../../Drivers/BSP/inc/KEY.h:

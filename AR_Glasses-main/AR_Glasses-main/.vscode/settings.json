@@ -3,6 +3,7 @@
         "ff.h": "c",
         "fatfs.h": "c",
         "kml_utils.h": "c",
-        "kml_parse_v2.h": "c"
+        "kml_parse_v2.h": "c",
+        "KEY.C": "cpp"
     }
 }

@@ -92,6 +92,10 @@ void Error_Handler(void);
 #define PWR_EN_GPIO_Port GPIOB
 #define LED_Pin GPIO_PIN_12
 #define LED_GPIO_Port GPIOB
+#define KEYC_Pin GPIO_PIN_13
+#define KEYC_GPIO_Port GPIOB
+#define KEYB_Pin GPIO_PIN_14
+#define KEYB_GPIO_Port GPIOB
 #define BLE_KEY_Pin GPIO_PIN_11
 #define BLE_KEY_GPIO_Port GPIOA
 #define BLE_LINK_Pin GPIO_PIN_12

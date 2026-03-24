@@ -33,7 +33,8 @@ Drivers/BSP/src/mpu6050.o: ../Drivers/BSP/src/mpu6050.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Drivers/BSP/inc/soft_i2c.h
+ ../Drivers/BSP/inc/soft_i2c.h ../Drivers/BSP/inc/imu_filter.h \
+ ../Drivers/BSP/inc/mahony_ahrs.h
 ../Drivers/BSP/inc/mpu6050.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -69,3 +70,5 @@ Drivers/BSP/src/mpu6050.o: ../Drivers/BSP/src/mpu6050.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Drivers/BSP/inc/soft_i2c.h:
+../Drivers/BSP/inc/imu_filter.h:
+../Drivers/BSP/inc/mahony_ahrs.h:

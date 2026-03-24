@@ -9,6 +9,7 @@ C_SRCS += \
 ../Drivers/BSP/src/Encoder.c \
 ../Drivers/BSP/src/GH3220.c \
 ../Drivers/BSP/src/GPS.c \
+../Drivers/BSP/src/KEY.c \
 ../Drivers/BSP/src/LCD.c \
 ../Drivers/BSP/src/LCD_TK024F3036.c \
 ../Drivers/BSP/src/SD_opera.c \
@@ -26,6 +27,7 @@ C_DEPS += \
 ./Drivers/BSP/src/Encoder.d \
 ./Drivers/BSP/src/GH3220.d \
 ./Drivers/BSP/src/GPS.d \
+./Drivers/BSP/src/KEY.d \
 ./Drivers/BSP/src/LCD.d \
 ./Drivers/BSP/src/LCD_TK024F3036.d \
 ./Drivers/BSP/src/SD_opera.d \
@@ -43,6 +45,7 @@ OBJS += \
 ./Drivers/BSP/src/Encoder.o \
 ./Drivers/BSP/src/GH3220.o \
 ./Drivers/BSP/src/GPS.o \
+./Drivers/BSP/src/KEY.o \
 ./Drivers/BSP/src/LCD.o \
 ./Drivers/BSP/src/LCD_TK024F3036.o \
 ./Drivers/BSP/src/SD_opera.o \
@@ -63,7 +66,7 @@ Drivers/BSP/src/%.o Drivers/BSP/src/%.su Drivers/BSP/src/%.cyclo: ../Drivers/BSP
 clean: clean-Drivers-2f-BSP-2f-src
 
 clean-Drivers-2f-BSP-2f-src:
-	-$(RM) ./Drivers/BSP/src/BLE.cyclo ./Drivers/BSP/src/BLE.d ./Drivers/BSP/src/BLE.o ./Drivers/BSP/src/BLE.su ./Drivers/BSP/src/Encoder.cyclo ./Drivers/BSP/src/Encoder.d ./Drivers/BSP/src/Encoder.o ./Drivers/BSP/src/Encoder.su ./Drivers/BSP/src/GH3220.cyclo ./Drivers/BSP/src/GH3220.d ./Drivers/BSP/src/GH3220.o ./Drivers/BSP/src/GH3220.su ./Drivers/BSP/src/GPS.cyclo ./Drivers/BSP/src/GPS.d ./Drivers/BSP/src/GPS.o ./Drivers/BSP/src/GPS.su ./Drivers/BSP/src/LCD.cyclo ./Drivers/BSP/src/LCD.d ./Drivers/BSP/src/LCD.o ./Drivers/BSP/src/LCD.su ./Drivers/BSP/src/LCD_TK024F3036.cyclo ./Drivers/BSP/src/LCD_TK024F3036.d ./Drivers/BSP/src/LCD_TK024F3036.o ./Drivers/BSP/src/LCD_TK024F3036.su ./Drivers/BSP/src/SD_opera.cyclo ./Drivers/BSP/src/SD_opera.d ./Drivers/BSP/src/SD_opera.o ./Drivers/BSP/src/SD_opera.su ./Drivers/BSP/src/beep.cyclo ./Drivers/BSP/src/beep.d ./Drivers/BSP/src/beep.o ./Drivers/BSP/src/beep.su ./Drivers/BSP/src/imu_filter.cyclo ./Drivers/BSP/src/imu_filter.d ./Drivers/BSP/src/imu_filter.o ./Drivers/BSP/src/imu_filter.su ./Drivers/BSP/src/kml_utils.cyclo ./Drivers/BSP/src/kml_utils.d ./Drivers/BSP/src/kml_utils.o ./Drivers/BSP/src/kml_utils.su ./Drivers/BSP/src/mahony_ahrs.cyclo ./Drivers/BSP/src/mahony_ahrs.d ./Drivers/BSP/src/mahony_ahrs.o ./Drivers/BSP/src/mahony_ahrs.su ./Drivers/BSP/src/motor.cyclo ./Drivers/BSP/src/motor.d ./Drivers/BSP/src/motor.o ./Drivers/BSP/src/motor.su ./Drivers/BSP/src/mpu6050.cyclo ./Drivers/BSP/src/mpu6050.d ./Drivers/BSP/src/mpu6050.o ./Drivers/BSP/src/mpu6050.su ./Drivers/BSP/src/my_spi.cyclo ./Drivers/BSP/src/my_spi.d ./Drivers/BSP/src/my_spi.o ./Drivers/BSP/src/my_spi.su ./Drivers/BSP/src/soft_i2c.cyclo ./Drivers/BSP/src/soft_i2c.d ./Drivers/BSP/src/soft_i2c.o ./Drivers/BSP/src/soft_i2c.su
+	-$(RM) ./Drivers/BSP/src/BLE.cyclo ./Drivers/BSP/src/BLE.d ./Drivers/BSP/src/BLE.o ./Drivers/BSP/src/BLE.su ./Drivers/BSP/src/Encoder.cyclo ./Drivers/BSP/src/Encoder.d ./Drivers/BSP/src/Encoder.o ./Drivers/BSP/src/Encoder.su ./Drivers/BSP/src/GH3220.cyclo ./Drivers/BSP/src/GH3220.d ./Drivers/BSP/src/GH3220.o ./Drivers/BSP/src/GH3220.su ./Drivers/BSP/src/GPS.cyclo ./Drivers/BSP/src/GPS.d ./Drivers/BSP/src/GPS.o ./Drivers/BSP/src/GPS.su ./Drivers/BSP/src/KEY.cyclo ./Drivers/BSP/src/KEY.d ./Drivers/BSP/src/KEY.o ./Drivers/BSP/src/KEY.su ./Drivers/BSP/src/LCD.cyclo ./Drivers/BSP/src/LCD.d ./Drivers/BSP/src/LCD.o ./Drivers/BSP/src/LCD.su ./Drivers/BSP/src/LCD_TK024F3036.cyclo ./Drivers/BSP/src/LCD_TK024F3036.d ./Drivers/BSP/src/LCD_TK024F3036.o ./Drivers/BSP/src/LCD_TK024F3036.su ./Drivers/BSP/src/SD_opera.cyclo ./Drivers/BSP/src/SD_opera.d ./Drivers/BSP/src/SD_opera.o ./Drivers/BSP/src/SD_opera.su ./Drivers/BSP/src/beep.cyclo ./Drivers/BSP/src/beep.d ./Drivers/BSP/src/beep.o ./Drivers/BSP/src/beep.su ./Drivers/BSP/src/imu_filter.cyclo ./Drivers/BSP/src/imu_filter.d ./Drivers/BSP/src/imu_filter.o ./Drivers/BSP/src/imu_filter.su ./Drivers/BSP/src/kml_utils.cyclo ./Drivers/BSP/src/kml_utils.d ./Drivers/BSP/src/kml_utils.o ./Drivers/BSP/src/kml_utils.su ./Drivers/BSP/src/mahony_ahrs.cyclo ./Drivers/BSP/src/mahony_ahrs.d ./Drivers/BSP/src/mahony_ahrs.o ./Drivers/BSP/src/mahony_ahrs.su ./Drivers/BSP/src/motor.cyclo ./Drivers/BSP/src/motor.d ./Drivers/BSP/src/motor.o ./Drivers/BSP/src/motor.su ./Drivers/BSP/src/mpu6050.cyclo ./Drivers/BSP/src/mpu6050.d ./Drivers/BSP/src/mpu6050.o ./Drivers/BSP/src/mpu6050.su ./Drivers/BSP/src/my_spi.cyclo ./Drivers/BSP/src/my_spi.d ./Drivers/BSP/src/my_spi.o ./Drivers/BSP/src/my_spi.su ./Drivers/BSP/src/soft_i2c.cyclo ./Drivers/BSP/src/soft_i2c.d ./Drivers/BSP/src/soft_i2c.o ./Drivers/BSP/src/soft_i2c.su
 
 .PHONY: clean-Drivers-2f-BSP-2f-src
 

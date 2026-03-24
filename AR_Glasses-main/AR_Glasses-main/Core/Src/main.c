@@ -30,6 +30,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "sdio.h"
+#include "beep.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -104,6 +105,7 @@ int main(void)
   MX_TIM2_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   // 发送SD卡初始化消息
   uint8_t sd_init_msg[] = "Initializing SD card...\r\n";
@@ -134,6 +136,11 @@ int main(void)
   // 发送DMA准备完成消息
   uint8_t uart_init_done_msg[] = "UART DMA ready\r\n";
   HAL_UART_Transmit(&huart1, uart_init_done_msg, strlen((char*)uart_init_done_msg), 100);
+  
+  // 初始化蜂鸣器
+  BEEP_Init();
+  // 关闭蜂鸣器
+  BEEP_Off();
 
   /* USER CODE END 2 */
 

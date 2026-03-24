@@ -1,0 +1,10 @@
+../Drivers/BSP/src/KEY.c:13:19:KEY_Init	1
+../Drivers/BSP/src/KEY.c:27:9:KEYB_Read	1
+../Drivers/BSP/src/KEY.c:36:9:KEYC_Read	1
+../Drivers/BSP/src/KEY.c:45:9:KEYB_IsPressed	1
+../Drivers/BSP/src/KEY.c:54:9:KEYC_IsPressed	1
+../Drivers/BSP/src/KEY.c:63:9:KEYB_IsReleased	1
+../Drivers/BSP/src/KEY.c:72:9:KEYC_IsReleased	1
+../Drivers/BSP/src/KEY.c:81:9:KEYB_HasReleased	1
+../Drivers/BSP/src/KEY.c:92:9:KEYC_HasReleased	1
+../Drivers/BSP/src/KEY.c:103:6:KEY_Update	5

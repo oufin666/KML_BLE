@@ -74,8 +74,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define MOTOR_Pin GPIO_PIN_13
-#define MOTOR_GPIO_Port GPIOC
+#define LCD_BLK_Pin GPIO_PIN_13
+#define LCD_BLK_GPIO_Port GPIOC
 #define LCD_DC_Pin GPIO_PIN_4
 #define LCD_DC_GPIO_Port GPIOA
 #define LCD_SCL_Pin GPIO_PIN_5
@@ -84,8 +84,8 @@ void Error_Handler(void);
 #define LCD_SDA_GPIO_Port GPIOA
 #define LCD_CS_Pin GPIO_PIN_0
 #define LCD_CS_GPIO_Port GPIOB
-#define LCD_BLK_Pin GPIO_PIN_1
-#define LCD_BLK_GPIO_Port GPIOB
+#define MOTOR_Pin GPIO_PIN_1
+#define MOTOR_GPIO_Port GPIOB
 #define BLE_RST_Pin GPIO_PIN_2
 #define BLE_RST_GPIO_Port GPIOB
 #define PWR_EN_Pin GPIO_PIN_10

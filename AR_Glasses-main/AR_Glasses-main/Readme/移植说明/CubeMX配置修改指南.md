@@ -246,22 +246,42 @@ MPU6050支持两种I2C通信方式：**硬件I2C** 和 **软件I2C**。请根据
      - 勾选 `TIM3 global interrupt` 使能中断
      - **Priority**: 10（或根据需要调整）
 
-#### 4.7 电机驱动 (模拟PWM)
+#### 4.7 电机驱动 (硬件PWM)
 
 | 引脚 | 模式 | 配置 | 说明 |
 |------|------|------|------|
-| PC13 | GPIO_Output | Push Pull, Low | 电机控制（模拟PWM） |
+| PB1 | TIM3_CH4 | AF2, Push Pull, No Pull | 电机控制（硬件PWM） |
 
 **配置说明**：
-- PC13 不支持硬件PWM，使用软件模拟PWM
-- 通过反复反转GPIO实现模拟PWM效果
+- 使用TIM3_CH4的硬件PWM输出控制电机
+- PB1作为TIM3_CH4的输出引脚
 
-**详细配置参数**：
-- **GPIO output level**：Low（初始状态为低电平）
-- **GPIO mode**：Output Push Pull（推挽输出模式）
-- **GPIO Pull-up/Pull-down**：No pull-up and no pull-down（不需要上下拉电阻）
-- **Maximum output speed**：Low（低速即可）
-- **User Label**：MOTOR（添加用户标签便于识别）
+**详细配置步骤**：
+
+1. **配置TIM3**
+   - 左侧菜单 → Timers → TIM3
+   - 勾选 `Internal Clock` 选项
+   - 点击上方 `Parameter Settings` 标签
+   - **Clock Source**: Internal Clock
+   - **Counter Settings**:
+     - `Prescaler (PSC)`: 7（时钟频率96MHz，96MHz/(7+1)=12MHz）
+     - `Counter Period (ARR)`: 999（12MHz/1000=12kHz PWM频率）
+   - **PWM Generation Channel 4**:
+     - 点击 `Channel 4` 标签
+     - **Mode**: PWM Generation CH4
+     - **Pulse**: 0（初始占空比0%）
+     - **Output Compare Polarity**: High
+     - **Output Compare Fast Mode**: Disable
+
+2. **配置GPIO引脚**
+   - 左侧菜单 → System Core → GPIO
+   - 或直接在引脚视图中点击 PB1
+   - **GPIO mode**: Alternate Function Push Pull
+   - **GPIO output level**: Low
+   - **GPIO Pull-up/Pull-down**: No pull-up and no pull-down
+   - **Maximum output speed**: High
+   - **Alternate Function**: AF2_TIM3
+   - **User Label**: MOTOR
 
 #### 4.8 按键检测模块
 
@@ -544,3 +564,4 @@ BLE_KML_TaskHandle = osThreadNew(StartBLEKMLTask, NULL, &BLE_KML_Task_attributes
 - 更新了蜂鸣器驱动配置，从TIM4硬件PWM改为TIM3中断+GPIO翻转实现
 - 修正了蜂鸣器引脚配置参数
 - 添加了按键检测模块配置说明（KEYB和KEYC）
+- 更新了电机驱动配置，从PC13软件模拟PWM改为PB1硬件PWM（TIM3_CH4）

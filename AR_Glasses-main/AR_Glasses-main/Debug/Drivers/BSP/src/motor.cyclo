@@ -1,5 +1,5 @@
-../Drivers/BSP/src/motor.c:8:6:MOTOR_Init	1
-../Drivers/BSP/src/motor.c:17:6:MOTOR_SetSpeed	3
-../Drivers/BSP/src/motor.c:30:6:MOTOR_Update	4
-../Drivers/BSP/src/motor.c:57:6:MOTOR_On	1
-../Drivers/BSP/src/motor.c:63:6:MOTOR_Off	1
+../Drivers/BSP/src/motor.c:7:6:MOTOR_Init	1
+../Drivers/BSP/src/motor.c:14:6:MOTOR_SetSpeed	3
+../Drivers/BSP/src/motor.c:30:6:MOTOR_Update	1
+../Drivers/BSP/src/motor.c:35:6:MOTOR_On	1
+../Drivers/BSP/src/motor.c:41:6:MOTOR_Off	1

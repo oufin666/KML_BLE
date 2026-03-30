@@ -16,7 +16,7 @@
  * - 使用软件I2C时，不需要在CubeMX中启用I2C1外设
  * - 使用硬件I2C时，需要在CubeMX中正确配置I2C1
  */
-#define MPU6050_USE_SOFT_I2C    1   // 1: 使用软件I2C, 0: 使用硬件I2C
+#define MPU6050_USE_SOFT_I2C    0   // 1: 使用软件I2C, 0: 使用硬件I2C
 
 /* ==================== 根据I2C模式选择包含头文件 ==================== */
 #if MPU6050_USE_SOFT_I2C

@@ -311,6 +311,16 @@ void StartTaskHR(void *argument)
 	sprintf(tx_buffer, "[KEY] Initialization success!\r\n");
 	HAL_UART_Transmit(BLE_UART_HANDLE, (uint8_t*)tx_buffer, strlen(tx_buffer), 100);
 
+	// 初始化电机
+	MOTOR_Init();
+	sprintf(tx_buffer, "[MOTOR] Initialization success!\r\n");
+	HAL_UART_Transmit(BLE_UART_HANDLE, (uint8_t*)tx_buffer, strlen(tx_buffer), 100);
+
+	// 开启电机，设置占空比50%
+	MOTOR_On();
+	sprintf(tx_buffer, "[MOTOR] Started with 50%% duty cycle\r\n");
+	HAL_UART_Transmit(BLE_UART_HANDLE, (uint8_t*)tx_buffer, strlen(tx_buffer), 100);
+
 	// 执行MPU6050初始化（仅初始化MPU6050，不初始化beep和motor）
 #if MPU6050_USE_SOFT_I2C
 	mpu_initialized = (MPU6050_Init(NULL) == 0);
@@ -377,6 +387,9 @@ void StartTaskHR(void *argument)
 		
 		// 每10毫秒更新一次按键状态
 		KEY_Update();
+		
+		// 更新电机PWM信号
+		MOTOR_Update();
 		
 		vTaskDelay(pdMS_TO_TICKS(10)); // 增加延时，减少任务调度频率
 	}

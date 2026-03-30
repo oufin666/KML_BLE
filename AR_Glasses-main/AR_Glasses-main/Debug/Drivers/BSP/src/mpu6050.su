@@ -1,8 +1,9 @@
-../Drivers/BSP/src/mpu6050.c:43:9:MPU6050_WriteReg	16	static
-../Drivers/BSP/src/mpu6050.c:68:9:MPU6050_ReadReg	16	static
+../Drivers/BSP/src/mpu6050.c:24:16:MPU6050_WaitI2C	24	static
+../Drivers/BSP/src/mpu6050.c:43:9:MPU6050_WriteReg	32	static
+../Drivers/BSP/src/mpu6050.c:68:9:MPU6050_ReadReg	32	static
 ../Drivers/BSP/src/mpu6050.c:102:9:MPU6050_GetID	16	static
 ../Drivers/BSP/src/mpu6050.c:110:9:MPU6050_Init	24	static
-../Drivers/BSP/src/mpu6050.c:163:9:MPU6050_GetRawData	32	static
+../Drivers/BSP/src/mpu6050.c:163:9:MPU6050_GetRawData	40	static
 ../Drivers/BSP/src/mpu6050.c:208:16:MPU6050_GetData	40	static
 ../Drivers/BSP/src/mpu6050.c:236:9:MPU6050_RunSelfTest	200	static
 ../Drivers/BSP/src/mpu6050.c:286:6:MPU6050_StartDataMonitorTask	192	static

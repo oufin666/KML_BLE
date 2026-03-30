@@ -102,10 +102,8 @@ void Error_Handler(void);
 #define BLE_LINK_GPIO_Port GPIOA
 #define MPU_INT_Pin GPIO_PIN_6
 #define MPU_INT_GPIO_Port GPIOB
-#define SOFT_I2C_SDA_Pin GPIO_PIN_8
-#define SOFT_I2C_SDA_GPIO_Port GPIOB
-#define SOFT_I2C_SCL_Pin GPIO_PIN_9
-#define SOFT_I2C_SCL_GPIO_Port GPIOB
+#define BEEP_Pin GPIO_PIN_7
+#define BEEP_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define  GPS_USART  USART2

@@ -31,6 +31,8 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h \
+ ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc.h \
@@ -276,8 +278,7 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
  ../Core/USER/APP/inc/testPage.h ../Core/USER/APP/inc/APP.h \
  ../Core/USER/Utils/Track_Parse/inc/kml_parse_v2.h \
  ../Core/Src/../../Drivers/BSP/inc/kml_utils.h \
- ../Core/Src/../../Drivers/BSP/inc/mpu6050.h \
- ../Core/Src/../../Drivers/BSP/inc/soft_i2c.h \
+ ../Core/Src/../../Drivers/BSP/inc/mpu6050.h ../Core/Inc/i2c.h \
  ../Core/Src/../../Drivers/BSP/inc/imu_filter.h \
  ../Core/Src/../../Drivers/BSP/inc/mahony_ahrs.h \
  ../Core/Src/../../Drivers/BSP/inc/beep.h \
@@ -316,6 +317,8 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h:
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rtc.h:
@@ -570,7 +573,7 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
 ../Core/USER/Utils/Track_Parse/inc/kml_parse_v2.h:
 ../Core/Src/../../Drivers/BSP/inc/kml_utils.h:
 ../Core/Src/../../Drivers/BSP/inc/mpu6050.h:
-../Core/Src/../../Drivers/BSP/inc/soft_i2c.h:
+../Core/Inc/i2c.h:
 ../Core/Src/../../Drivers/BSP/inc/imu_filter.h:
 ../Core/Src/../../Drivers/BSP/inc/mahony_ahrs.h:
 ../Core/Src/../../Drivers/BSP/inc/beep.h:
